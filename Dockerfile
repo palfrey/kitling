@@ -8,6 +8,7 @@ VOLUME ["/kittens"]
 WORKDIR /kittens
 ADD requirements.txt /kittens/requirements.txt
 RUN pip install -r /kittens/requirements.txt
-ADD test.py /kittens/test.py
-CMD xvfb-run -e /kittens/error.log python /kittens/test.py
-#CMD xvfb-run -e /kittens/error.log -s "+extension GLX +extension XVideo +extension Composite +extension DAMAGE +extension RENDER +extension RANDR -dpi 100 -s 1048x768x16" python /kittens/test.py
+#ADD test.py /kittens/test.py
+RUN apt-get update && apt-get install -y curl
+#RUN apt-get install -y python-scipy
+CMD xvfb-run -e /kittens/error.log gunicorn test:app

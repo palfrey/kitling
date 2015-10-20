@@ -1,0 +1,10 @@
+imager:
+  build: imager/
+  ports:
+    - "8000:8000"
+postgres:
+  image: postgres
+  ports:
+    - "5432:5432"
+  environment:
+    - POSTGRES_PASSWORD: mysecretpassword

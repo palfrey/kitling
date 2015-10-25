@@ -19,3 +19,7 @@ class VideoViewSet(viewsets.ModelViewSet):
 	permission_classes = (permissions.IsAdminUser,)
 	queryset = Video.objects.all()
 	serializer_class = VideoSerializer
+
+class FeedViewSet(viewsets.ModelViewSet):
+	queryset = Feed.objects.all()
+	serializer_class = FeedSerializer

@@ -15,4 +15,9 @@ class GroupSerializer(serializers.HyperlinkedModelSerializer):
 class VideoSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = Video
-        fields = ('url',)
+        fields = ('url','motion')
+
+class FeedSerializer(serializers.HyperlinkedModelSerializer):
+    class Meta:
+        model = Feed
+        fields = ('name','owner', 'videos')

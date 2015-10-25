@@ -1,0 +1,12 @@
+[package]
+name = "kitling"
+version = "0.1.0"
+authors = ["Your Name <you@example.com>"]
+
+[dependencies.img_hash]
+git = "https://github.com/cybergeek94/img_hash"
+# For interop with `image`:
+features = ["rust-image"]
+
+[dependencies]
+image = "*"

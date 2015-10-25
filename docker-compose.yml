@@ -2,9 +2,13 @@ imager:
   build: imager/
   ports:
     - "8000:8000"
+comparer:
+  build: comparer/
+  links:
+    - postgres
 postgres:
   image: postgres
   ports:
     - "5432:5432"
   environment:
-    - POSTGRES_PASSWORD: mysecretpassword
+    - POSTGRES_PASSWORD=mysecretpassword

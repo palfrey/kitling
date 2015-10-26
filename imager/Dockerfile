@@ -1,6 +1,6 @@
 FROM ubuntu:15.04
-# make sure the package repository is up to date
 RUN echo "deb http://archive.ubuntu.com/ubuntu vivid multiverse\n" >> /etc/apt/sources.list
+ENV DEBIAN_FRONTEND noninteractive
 RUN apt-get update
 
 RUN apt-get install -fy xvfb firefox python-pip python-dev libjpeg-dev zlib1g-dev && apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*

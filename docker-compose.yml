@@ -6,6 +6,10 @@ comparer:
   build: comparer/
   links:
     - postgres
+  volumes:
+    - ./comparer/:/comparer/
+  environment:
+    - DATABASE_URL=postgres://postgres:mysecretpassword@postgres/postgres
 postgres:
   image: postgres
   ports:

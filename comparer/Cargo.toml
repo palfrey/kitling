@@ -10,3 +10,6 @@ features = ["rust-image"]
 
 [dependencies]
 image = "*"
+postgres = "0.10"
+log = "*"
+log4rs = "0.3.3"

@@ -4,6 +4,7 @@ comparer:
   build: comparer/
   links:
     - postgres
+    - imager
   volumes:
     - ./comparer/:/comparer/
   environment:

@@ -10,6 +10,9 @@ features = ["rust-image"]
 
 [dependencies]
 image = "*"
-postgres = "0.10"
+postgres = {version = "0.10", features=["time"]}
 log = "*"
 log4rs = "0.3.3"
+time = "0.1.33"
+curl = "0.2.12"
+url = "0.2.37"

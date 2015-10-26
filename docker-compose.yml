@@ -1,13 +1,19 @@
 imager:
   build: imager/
-  ports:
-    - "8000:8000"
 comparer:
   build: comparer/
   links:
     - postgres
   volumes:
     - ./comparer/:/comparer/
+  environment:
+    - DATABASE_URL=postgres://postgres:mysecretpassword@postgres/postgres
+frontend:
+  build: frontend/
+  ports:
+    - "8000:8000"
+  links:
+    - postgres
   environment:
     - DATABASE_URL=postgres://postgres:mysecretpassword@postgres/postgres
 postgres:

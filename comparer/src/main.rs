@@ -48,6 +48,7 @@ fn main() {
                                         "update videos_video set working = true, hash = $1, \
                                          motion = $2, \"lastRetrieved\" = $3 where id = $4");
 
+    info!("Connected to Postgres and ready to update video...");
     loop {
         let res = query_stmt.query(&[]);
         if res.is_err() {

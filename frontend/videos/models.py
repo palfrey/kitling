@@ -1,10 +1,11 @@
 from django.db import models
 from django.contrib.auth.models import User
+from datetime import datetime
 
 class Video(models.Model):
 	url = models.URLField(unique = True)
 	working = models.BooleanField(default = False)
-	lastRetrieved = models.DateTimeField(default = None, null = True)
+	lastRetrieved = models.DateTimeField(default = datetime.min)
 	motion = models.FloatField(default = 0.0)
 	hash = models.CharField(max_length = 100, null = True)
 

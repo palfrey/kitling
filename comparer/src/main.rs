@@ -43,7 +43,7 @@ fn main() {
 
     let query_stmt = prepare_statement(&conn,
                                        "select * from videos_video order by \"lastRetrieved\" \
-                                        desc limit 1");
+                                        asc limit 1");
     let update_stmt = prepare_statement(&conn,
                                         "update videos_video set working = true, hash = $1, \
                                          motion = $2, \"lastRetrieved\" = $3 where id = $4");

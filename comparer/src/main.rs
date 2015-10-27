@@ -39,15 +39,22 @@ fn prepare_statement<'a>(conn: &'a Connection, stmt: &str) -> Statement<'a> {
 }
 
 fn main() {
-	let mut config_string = String::new();
-	File::open("config.toml").unwrap().read_to_string(&mut config_string).unwrap();
-	let mut parser = toml::Parser::new(&config_string);
+    let mut config_string = String::new();
+    File::open("config.toml").unwrap().read_to_string(&mut config_string).unwrap();
+    let mut parser = toml::Parser::new(&config_string);
 
-	let config = parser.parse().unwrap();
-	let config_table = config.get("config").unwrap();
-	let interval = Duration::minutes(config_table.lookup("refresh_minutes").unwrap().as_integer().unwrap());
-	let imager_url: &str = &(String::from(config_table.lookup("imager_host").unwrap().as_str().unwrap()) + &String::from("/streams"));
-	let check_ms = config_table.lookup("check_ms").unwrap().as_integer().unwrap() as u32;
+    let config = parser.parse().unwrap();
+    let config_table = config.get("config").unwrap();
+    let interval = Duration::minutes(config_table.lookup("refresh_minutes")
+                                                 .unwrap()
+                                                 .as_integer()
+                                                 .unwrap());
+    let imager_url: &str = &(String::from(config_table.lookup("imager_host")
+                                                      .unwrap()
+                                                      .as_str()
+                                                      .unwrap()) +
+                             &String::from("/streams"));
+    let check_ms = config_table.lookup("check_ms").unwrap().as_integer().unwrap() as u32;
 
     log4rs::init_file("log.toml", Default::default()).unwrap();
     let db_url: &str = &env::var("DATABASE_URL").unwrap();

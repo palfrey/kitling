@@ -5,17 +5,21 @@ extern crate postgres;
 extern crate log;
 extern crate log4rs;
 extern crate time;
-extern crate curl;
+extern crate hyper;
 extern crate url;
+extern crate png;
 
 use std::env;
 use postgres::{Connection, SslMode};
-use std::path::Path;
 use img_hash::{ImageHash, HashType};
 use std::thread;
 use std::default::Default;
 use time::{Timespec, Duration};
-use curl::http;
+use hyper::Client;
+use hyper::header::ContentType;
+use image::ImageFormat;
+use std::io::Read;
+use hyper::status::StatusCode;
 
 fn main() {
     log4rs::init_file("log.toml", Default::default()).unwrap();
@@ -66,25 +70,26 @@ fn main() {
         options.push(("url".to_string(), url));
         let data: &str = &url::form_urlencoded::serialize(&options);
 
-        println!("{}", data);
-        let resp = http::handle()
-            .post("http://imager:8000/streams", data)
-            .exec().unwrap();
+        let mut resp = Client::new()
+            .post("http://imager:8000/streams")
+            .header(ContentType::form_url_encoded())
+            .body(data)
+            .send().unwrap();
 
-        println!("{}", resp);
+        if resp.status != StatusCode::Ok {
+            warn!("{:?}", resp.status_raw());
+            thread::sleep_ms(4000);
+            continue;
+        }
 
-        let image1 = image::open(&Path::new("image1.png")).unwrap();
-        let image2 = image::open(&Path::new("image2.png")).unwrap();
+        let mut buf = Vec::new();
+        resp.read_to_end(&mut buf).unwrap();
+        let image = image::load_from_memory_with_format(&buf, ImageFormat::PNG).unwrap();
+        let hash = ImageHash::hash(&image, 8, HashType::Gradient);
 
-        // These two lines produce hashes with 64 bits (8 ** 2),
-        // using the Gradient hash, a good middle ground between
-        // the performance of Mean and the accuracy of DCT.
-        let hash1 = ImageHash::hash(&image1, 8, HashType::Gradient);
-        let hash2 = ImageHash::hash(&image2, 8, HashType::Gradient);
+        println!("Image hash: {}", hash.to_base64());
+        thread::sleep_ms(4000);
 
-        println!("Image1 hash: {}", hash1.to_base64());
-        println!("Image2 hash: {}", hash2.to_base64());
-
-        println!("% Difference: {}", hash1.dist_ratio(&hash2));
+        //println!("% Difference: {}", hash1.dist_ratio(&hash2));
     }
 }

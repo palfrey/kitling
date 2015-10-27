@@ -1,7 +1,7 @@
 [package]
 name = "kitling"
 version = "0.1.0"
-authors = ["Your Name <you@example.com>"]
+authors = ["Tom Parker <palfrey@tevp.net>"]
 
 [dependencies.img_hash]
 git = "https://github.com/cybergeek94/img_hash"

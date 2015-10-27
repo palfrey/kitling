@@ -1,0 +1,4 @@
+[config]
+imager_host = "http://imager:8000"
+refresh_minutes = 10
+check_ms = 4000

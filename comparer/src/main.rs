@@ -8,6 +8,7 @@ extern crate time;
 extern crate hyper;
 extern crate url;
 extern crate png;
+extern crate toml;
 
 use std::env;
 use postgres::{Connection, SslMode};
@@ -21,6 +22,7 @@ use image::ImageFormat;
 use std::io::Read;
 use hyper::status::StatusCode;
 use postgres::stmt::Statement;
+use std::fs::File;
 
 fn prepare_statement<'a>(conn: &'a Connection, stmt: &str) -> Statement<'a> {
     loop {
@@ -37,6 +39,16 @@ fn prepare_statement<'a>(conn: &'a Connection, stmt: &str) -> Statement<'a> {
 }
 
 fn main() {
+	let mut config_string = String::new();
+	File::open("config.toml").unwrap().read_to_string(&mut config_string).unwrap();
+	let mut parser = toml::Parser::new(&config_string);
+
+	let config = parser.parse().unwrap();
+	let config_table = config.get("config").unwrap();
+	let interval = Duration::minutes(config_table.lookup("refresh_minutes").unwrap().as_integer().unwrap());
+	let imager_url: &str = &(String::from(config_table.lookup("imager_host").unwrap().as_str().unwrap()) + &String::from("/streams"));
+	let check_ms = config_table.lookup("check_ms").unwrap().as_integer().unwrap() as u32;
+
     log4rs::init_file("log.toml", Default::default()).unwrap();
     let db_url: &str = &env::var("DATABASE_URL").unwrap();
     let conn = Connection::connect(db_url, &SslMode::None).unwrap();
@@ -53,14 +65,14 @@ fn main() {
         let res = query_stmt.query(&[]);
         if res.is_err() {
             error!("Error in query: {}", res.unwrap_err());
-            thread::sleep_ms(4000);
+            thread::sleep_ms(check_ms);
             continue;
         }
 
         let items = res.unwrap();
         if items.len() == 0 {
             warn!("No video feeds");
-            thread::sleep_ms(4000);
+            thread::sleep_ms(check_ms);
             continue;
         }
         let item = items.get(0);
@@ -76,9 +88,9 @@ fn main() {
             let now = time::now().to_timespec();
             let diff: Duration = now - when.unwrap();
             debug!("Item: {}, When: {}", url, diff);
-            if diff < Duration::minutes(1) {
+            if diff < interval {
                 debug!("oldest item is young: {}", diff);
-                thread::sleep_ms(4000);
+                thread::sleep_ms(check_ms);
                 continue;
             }
         }
@@ -89,7 +101,7 @@ fn main() {
         let data: &str = &url::form_urlencoded::serialize(&options);
 
         let mut resp = Client::new()
-                           .post("http://imager:8000/streams")
+                           .post(imager_url)
                            .header(ContentType::form_url_encoded())
                            .body(data)
                            .send()
@@ -97,7 +109,7 @@ fn main() {
 
         if resp.status != StatusCode::Ok {
             warn!("{:?}", resp.status_raw());
-            thread::sleep_ms(4000);
+            thread::sleep_ms(check_ms);
             continue;
         }
 

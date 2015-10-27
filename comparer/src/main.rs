@@ -116,6 +116,5 @@ fn main() {
             Ok(_) => info!("Updated {} with motion {}", url, motion),
             Err(err) => warn!("Error executing update: {:?}", err),
         }
-        thread::sleep_ms(4000);
     }
 }

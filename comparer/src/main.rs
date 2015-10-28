@@ -85,8 +85,7 @@ fn main() {
         let url: String = item.get("url");
         let when: postgres::Result<Timespec> = item.get_opt("lastRetrieved");
         let id: i32 = item.get("id");
-        let old_hash_raw: postgres::Result<String> = item.get_opt("hash");
-        let old_hash = ImageHash::from_base64(&old_hash_raw.unwrap());
+        let old_hash: postgres::Result<String> = item.get_opt("hash");
 
         if when.is_err() {
             debug!("Item: {}, When: never", url);
@@ -126,8 +125,14 @@ fn main() {
 
         debug!("Image hash: {}", hash.to_base64());
         let motion: f64 = match old_hash {
-            Ok(val) => val.dist_ratio(&hash) as f64,
-            Err(_) => -1 as f64,
+            Ok(val) => {
+                match ImageHash::from_base64(&val) {
+                    Ok(val) => val.dist_ratio(&hash) as f64,
+                    Err(_) => -1 as f64
+                }
+            },
+            Err(_) => -1 as f64
+
         };
         debug!("Difference {}", motion);
         let now = time::now().to_timespec();

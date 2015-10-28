@@ -9,13 +9,14 @@ class Video(models.Model):
 	lastRetrieved = models.DateTimeField(default = datetime.min)
 	motion = models.FloatField(default = 0.0)
 	hash = models.CharField(max_length = 100, null = True)
- 	extra = JSONField(default = {})
+ 	extra = JSONField(default = {}, blank=True)
 
 	def __unicode__(self):
 		return self.url
 
 class Feed(models.Model):
 	name = models.CharField(max_length = 200)
+	description = models.TextField()
 	owner = models.ForeignKey(User)
 	videos = models.ManyToManyField(Video)
 

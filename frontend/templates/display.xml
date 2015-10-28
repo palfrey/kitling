@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:py="http://genshi.edgewall.org/">
+    <title>Video display for ${feed.name}</title>
+	<style>
+		body {
+		    margin: 0 !important;
+		    padding: 0 !important;
+		}
+	</style>
+	<script src="//code.jquery.com/jquery-2.1.4.min.js" />
+	<iframe src="" width="1440" height="778" frameborder="0" scrolling="no" id="videoFrame"> </iframe>
+	<script>
+    function updateVideoFeed() {
+        $.get( "/feed/${feed.owner.username}/${feed.name}/", function( xml ) {
+          xmlDoc = $.parseXML( xml );
+          xml = $( xmlDoc );
+          url = xml.find("url").text();
+          vf = $( "#videoFrame" );
+          if (vf.attr("src") != url) {
+              console.log("New video URL " + url);
+              vf.attr("src", url);
+          }
+          setTimeout(updateVideoFeed, 5000);
+        });
+    }
+    updateVideoFeed();
+	</script>
+</html>

@@ -1,15 +1,25 @@
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:py="http://genshi.edgewall.org/">
-	<style>
-		body {
-		    margin: 0 !important;
-		    padding: 0 !important;
-		}
-	</style>
-	<script src="//code.jquery.com/jquery-2.1.4.min.js" />
-	<iframe src="http://livestream.com/accounts/4175709/events/4206552/player?autoPlay=true&amp;mute=false" width="1440" height="778" frameborder="0" scrolling="no"> </iframe>
-	<script>
-		//alert($(window).height());
-	</script>
+	  <head>
+		  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css" integrity="sha512-dTfge/zgoMYpP7QbHy4gWMEGsbsdZeCXz7irItjcC3sPUFtf0kuFbDz/ixG7ArTxmDjLXDmezHubeNikyKGVyQ==" crossorigin="anonymous" />
+
+		  <!-- Latest compiled and minified JavaScript -->
+		  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js" integrity="sha512-K1qjQ+NcF2TYO/eI3M6v8EiNYZfA95pQumfvcVrTHtwQVDG+aHRqLi/ETn2uB+1JqwYqVG3LIvdm9lj6imS/pQ==" crossorigin="anonymous"></script>
+	  </head>
+	  <body>
+	<div class="container-fluid">
+	<h1>Kitling</h1>
+		  <ul>
+		    <li py:for="user in users" class="lead">${user.username}
+				<ul>
+					<li py:for="feed in [x for x in feeds if x.owner == user]" class="lead">
+						${feed.name} - ${feed.description}
+						<a href="/display/${user.username}/${feed.name}" class="btn btn-primary" role="button">Show</a>
+					</li>
+				</ul>
+			</li>
+		  </ul>
+	  </div>
+	  </body>
 </html>

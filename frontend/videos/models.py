@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import User
 from datetime import datetime
+from jsonfield import JSONField
 
 class Video(models.Model):
 	url = models.URLField(unique = True)
@@ -8,8 +9,7 @@ class Video(models.Model):
 	lastRetrieved = models.DateTimeField(default = datetime.min)
 	motion = models.FloatField(default = 0.0)
 	hash = models.CharField(max_length = 100, null = True)
-	account = models.IntegerField(null = True)
-	events = models.IntegerField(null = True)
+ 	extra = JSONField(default = {})
 
 	def __unicode__(self):
 		return self.url

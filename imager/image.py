@@ -5,11 +5,14 @@ from PIL import Image
 from StringIO import StringIO
 import falcon
 import urlparse
+from re import compile
+from json import dumps
 
 class StreamResource:
 	patterns = {
 		"livestream.com" : {
-			"path" : "//div[@id='image-container']/img"
+			"path" : "//div[@id='image-container']/img",
+			"extra": compile("app-argument=http://livestream.com/accounts/(\d+)/events/(\d+)")
 		}
 	}
 
@@ -30,6 +33,9 @@ class StreamResource:
 		settings = self.patterns[loc]
 		self.driver.get(url)
 		element = self.driver.find_element_by_xpath(settings["path"])
+		if settings.has_key("extra"):
+			extra = settings["extra"].search(self.driver.page_source).groups()
+			resp.append_header("X-Extra", dumps(extra))
 		ss = self.driver.get_screenshot_as_png()
 		im = Image.open(StringIO(ss))
 		r = element.rect

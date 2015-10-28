@@ -1,11 +1,10 @@
 extern crate image;
 extern crate img_hash;
 extern crate postgres;
-#[macro_use]
-extern crate log;
+#[macro_use] extern crate log;
 extern crate log4rs;
 extern crate time;
-extern crate hyper;
+#[macro_use] extern crate hyper;
 extern crate url;
 extern crate toml;
 
@@ -22,6 +21,8 @@ use std::io::Read;
 use hyper::status::StatusCode;
 use postgres::stmt::Statement;
 use std::fs::File;
+
+header! { (XExtra, "X-Extra") => [String] }
 
 fn prepare_statement<'a>(conn: &'a Connection, stmt: &str) -> Statement<'a> {
     loop {
@@ -64,7 +65,7 @@ fn main() {
                                         asc limit 1");
     let update_stmt = prepare_statement(&conn,
                                         "update videos_video set working = true, hash = $1, \
-                                         motion = $2, \"lastRetrieved\" = $3 where id = $4");
+                                         motion = $2, \"lastRetrieved\" = $3, extra = $4 where id = $5");
 
     info!("Connected to Postgres and ready to update video...");
     loop {
@@ -118,6 +119,11 @@ fn main() {
             continue;
         }
 
+        let extra: String = match resp.headers.get::<XExtra>() {
+            Some(val) => val.to_string(),
+            None => "{}".to_string()
+        };
+
         let mut buf = Vec::new();
         resp.read_to_end(&mut buf).unwrap();
         let image = image::load_from_memory_with_format(&buf, ImageFormat::PNG).unwrap();
@@ -132,11 +138,10 @@ fn main() {
                 }
             },
             Err(_) => -1 as f64
-
         };
         debug!("Difference {}", motion);
         let now = time::now().to_timespec();
-        match update_stmt.execute(&[&hash.to_base64(), &motion, &now, &id]) {
+        match update_stmt.execute(&[&hash.to_base64(), &motion, &now, &extra, &id]) {
             Ok(_) => info!("Updated {} with motion {}", url, motion),
             Err(err) => warn!("Error executing update: {:?}", err),
         }

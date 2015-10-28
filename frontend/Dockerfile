@@ -9,5 +9,6 @@ WORKDIR /frontend
 COPY kitling /frontend/kitling
 COPY videos /frontend/videos
 COPY manage.py /frontend/manage.py
+COPY refreeze.sh /frontend/refreeze.sh
 EXPOSE 8000
 CMD python manage.py migrate && python manage.py runserver 0.0.0.0:8000

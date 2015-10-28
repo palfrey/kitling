@@ -20,6 +20,7 @@
 				</ul>
 			</li>
 		  </ul>
+          <a href="/admin" class="btn btn-danger" role="button">Admin</a>
 	  </div>
 	  </body>
 </html>

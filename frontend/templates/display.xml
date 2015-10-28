@@ -10,29 +10,31 @@
 	</style>
 	<script src="//code.jquery.com/jquery-2.1.4.min.js" />
     <h2 py:if="feed.videos.count() == 0">No videos for '${feed.name}'!</h2>
-	<iframe src="" width="1440" height="778" frameborder="0" scrolling="no" id="videoFrame"> </iframe>
-	<script>
-    function updateVideoFeed() {
-        $.get( "/feed/${feed.owner.username}/${feed.name}/", function( xml ) {
-          xmlDoc = $.parseXML( xml );
-          xml = $( xmlDoc );
-          url = xml.find("url").text();
-          vf = $( "#videoFrame" );
-          if (vf.attr("src") != url) {
-              console.log("New video URL " + url);
-              vf.attr("src", url);
-          }
-          setTimeout(updateVideoFeed, 5000);
-        });
-    }
-    updateVideoFeed();
+    <py:if test="feed.videos.count() > 0">
+    	<iframe src="" width="1440" height="778" frameborder="0" scrolling="no" id="videoFrame"> </iframe>
+    	<script>
+        function updateVideoFeed() {
+            $.get( "/feed/${feed.owner.username}/${feed.name}/", function( xml ) {
+              xmlDoc = $.parseXML( xml );
+              xml = $( xmlDoc );
+              url = xml.find("url").text();
+              vf = $( "#videoFrame" );
+              if (vf.attr("src") != url) {
+                  console.log("New video URL " + url);
+                  vf.attr("src", url);
+              }
+              setTimeout(updateVideoFeed, 5000);
+            });
+        }
+        updateVideoFeed();
 
-    function resizeWindow() {
-        vf = $( "#videoFrame" );
-        vf.attr("width", $(document).width());
-        vf.attr("height", $(document).height());
-    }
-    resizeWindow();
-    $( window ).resize(resizeWindow);
-	</script>
+        function resizeWindow() {
+            vf = $( "#videoFrame" );
+            vf.attr("width", $(document).width());
+            vf.attr("height", $(document).height());
+        }
+        resizeWindow();
+        $( window ).resize(resizeWindow);
+    	</script>
+    </py:if>
 </html>

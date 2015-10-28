@@ -1,9 +1,9 @@
-from django.shortcuts import render
-
 from django.contrib.auth.models import User, Group
 from rest_framework import viewsets, permissions
 from serialisers import *
 from models import *
+
+from django_genshi import render_to_response
 
 class UserViewSet(viewsets.ModelViewSet):
 	permission_classes = (permissions.IsAdminUser,)
@@ -23,3 +23,6 @@ class VideoViewSet(viewsets.ModelViewSet):
 class FeedViewSet(viewsets.ModelViewSet):
 	queryset = Feed.objects.all()
 	serializer_class = FeedSerializer
+
+def index(request):
+	return render_to_response("index.xml")

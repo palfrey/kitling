@@ -8,6 +8,8 @@ class Video(models.Model):
 	lastRetrieved = models.DateTimeField(default = datetime.min)
 	motion = models.FloatField(default = 0.0)
 	hash = models.CharField(max_length = 100, null = True)
+	account = models.IntegerField(null = True)
+	events = models.IntegerField(null = True)
 
 	def __unicode__(self):
 		return self.url

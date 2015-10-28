@@ -27,19 +27,10 @@
     }
     updateVideoFeed();
 
-    $.getDocHeight = function(){
-        return Math.max(
-            $(document).height(),
-            $(window).height(),
-            /* For opera: */
-            document.documentElement.clientHeight
-        );
-    };
-
     function resizeWindow() {
         vf = $( "#videoFrame" );
-        vf.attr("width", document.body.clientWidth);
-        vf.attr("height", $.getDocHeight());
+        vf.attr("width", $(document).width());
+        vf.attr("height", $(document).height());
     }
     resizeWindow();
     $( window ).resize(resizeWindow);

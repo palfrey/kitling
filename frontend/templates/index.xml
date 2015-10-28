@@ -8,7 +8,7 @@
 		}
 	</style>
 	<script src="//code.jquery.com/jquery-2.1.4.min.js" />
-	<iframe src="http://livestream.com/accounts/4175709/events/4206552/player?width=960&amp;height=540&amp;autoPlay=true&amp;mute=false" width="1440" height="778" frameborder="0" scrolling="no"> </iframe>
+	<iframe src="http://livestream.com/accounts/4175709/events/4206552/player?autoPlay=true&amp;mute=false" width="1440" height="778" frameborder="0" scrolling="no"> </iframe>
 	<script>
 		//alert($(window).height());
 	</script>

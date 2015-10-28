@@ -13,6 +13,9 @@ class StreamResource:
 		"livestream.com" : {
 			"path" : "//div[@id='image-container']/img",
 			"extra": compile("app-argument=http://livestream.com/accounts/(\d+)/events/(\d+)")
+		},
+		"www.ustream.tv" : {
+			"path": "//video[@id='UViewer']"
 		}
 	}
 
@@ -32,7 +35,12 @@ class StreamResource:
 			raise falcon.HTTPBadRequest("Video host %s is not supported" % loc, "Try a different host")
 		settings = self.patterns[loc]
 		self.driver.get(url)
-		element = self.driver.find_element_by_xpath(settings["path"])
+		time.sleep(5)
+		try:
+			element = self.driver.find_element_by_xpath(settings["path"])
+		except Exception:
+			open("dump.txt","wb").write(self.driver.page_source.encode("utf-8"))
+			raise
 		if settings.has_key("extra"):
 			extra = settings["extra"].search(self.driver.page_source).groups()
 			resp.append_header("X-Extra", dumps(extra))

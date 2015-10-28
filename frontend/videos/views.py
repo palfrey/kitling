@@ -45,5 +45,8 @@ def feed(request, username, feedName):
 	elif loc == "livestream.com":
 		url = "http://livestream.com/accounts/%s/events/%s/player?autoPlay=true&amp;mute=false" % tuple(video.extra)
 		return render_to_response("feed.xml", {"url": url} )
+	elif loc == "www.ustream.tv":
+		url = "%s?html5ui=1&autoplay=true" % video.url
+		return render_to_response("feed.xml", {"url": url} )
 	else:
 		return HttpResponseBadRequest("Don't know what to do with host '%s' from %s" % (loc, video.url))

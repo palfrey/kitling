@@ -8,7 +8,7 @@ class Video(models.Model):
 	working = models.BooleanField(default = False)
 	lastRetrieved = models.DateTimeField(default = datetime.min)
 	motion = models.FloatField(default = 0.0)
-	hash = models.CharField(max_length = 100, null = True)
+	hash = models.CharField(max_length = 100, null = True, default = None)
  	extra = JSONField(default = {}, blank=True)
 
 	def __unicode__(self):

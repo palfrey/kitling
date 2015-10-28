@@ -9,6 +9,7 @@
 		}
 	</style>
 	<script src="//code.jquery.com/jquery-2.1.4.min.js" />
+    <h2 py:if="feed.videos.count() == 0">No videos for '${feed.name}'!</h2>
 	<iframe src="" width="1440" height="778" frameborder="0" scrolling="no" id="videoFrame"> </iframe>
 	<script>
     function updateVideoFeed() {

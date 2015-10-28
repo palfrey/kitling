@@ -3,6 +3,7 @@ from rest_framework import viewsets, permissions
 from serialisers import *
 from models import *
 import urlparse
+from django.http import HttpResponseBadRequest
 
 from django_genshi import render_to_response
 
@@ -35,6 +36,8 @@ def display(request, username, feedName):
 def feed(request, username, feedName):
 	feed = Feed.objects.get(owner__username__iexact = username, name__iexact = feedName)
 	video = feed.videos.order_by("-motion").first()
+	if video == None:
+		return HttpResponseBadRequest("No usable videos")
 	res = urlparse.urlparse(video.url)
 	loc = res.netloc
 	if loc == "":

@@ -18,7 +18,7 @@ class Feed(models.Model):
 	name = models.CharField(max_length = 200)
 	description = models.TextField()
 	owner = models.ForeignKey(User)
-	videos = models.ManyToManyField(Video)
+	videos = models.ManyToManyField(Video, blank = True)
 
 	class Meta:
 		unique_together = ("name", "owner")

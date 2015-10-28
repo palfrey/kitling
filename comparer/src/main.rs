@@ -7,7 +7,6 @@ extern crate log4rs;
 extern crate time;
 extern crate hyper;
 extern crate url;
-extern crate png;
 extern crate toml;
 
 use std::env;

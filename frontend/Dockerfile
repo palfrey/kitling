@@ -8,6 +8,7 @@ RUN pip install -r requirements.txt
 WORKDIR /frontend
 COPY kitling /frontend/kitling
 COPY videos /frontend/videos
+COPY templates /frontend/templates
 COPY manage.py /frontend/manage.py
 COPY refreeze.sh /frontend/refreeze.sh
 EXPOSE 8000

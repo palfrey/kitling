@@ -1,0 +1,21 @@
+imager:
+  image: kitling/imager
+comparer:
+  image: kitling/comparer
+  links:
+    - postgres
+    - imager
+  environment:
+    - DATABASE_URL=postgres://postgres:mysecretpassword@postgres/postgres
+frontend:
+  image: kitling/frontend
+  ports:
+    - "8000:8000"
+  links:
+    - postgres
+  environment:
+    - DATABASE_URL=postgres://postgres:mysecretpassword@postgres/postgres
+postgres:
+  image: postgres
+  environment:
+    - POSTGRES_PASSWORD=mysecretpassword

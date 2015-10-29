@@ -33,9 +33,23 @@ def display(request, username, feedName):
 	feed = Feed.objects.get(owner__username__iexact = username, name__iexact = feedName)
 	return render_to_response("display.xml", {"feed": feed } )
 
+def all_display(request):
+	class AllFeed(object):
+		def __init__(self):
+			self.videos = Video.objects.all()
+			self.name = "All videos"
+			self.all = True
+
+	return render_to_response("display.xml", {"feed": AllFeed() } )
+
 def feed(request, username, feedName):
 	feed = Feed.objects.get(owner__username__iexact = username, name__iexact = feedName)
-	video = feed.videos.order_by("-motion").first()
+	return feed_core(feed.videos.order_by("-motion").first())
+
+def all_feeds(request):
+	return feed_core(Video.objects.order_by("-motion").first())
+
+def feed_core(video):
 	if video == None:
 		return HttpResponseBadRequest("No usable videos")
 	res = urlparse.urlparse(video.url)

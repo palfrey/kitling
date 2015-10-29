@@ -19,6 +19,7 @@ class Feed(models.Model):
 	description = models.TextField()
 	owner = models.ForeignKey(User)
 	videos = models.ManyToManyField(Video, blank = True)
+	all = False
 
 	class Meta:
 		unique_together = ("name", "owner")

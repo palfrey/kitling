@@ -19,6 +19,7 @@
 					</li>
 				</ul>
 			</li>
+            <p class="lead">All videos <a href="/display/_all" class="btn btn-primary">Show</a></p>
 		  </ul>
           <a href="/admin" class="btn btn-danger" role="button">Admin</a>
 	  </div>

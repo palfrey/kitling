@@ -14,7 +14,8 @@
     	<iframe src="" width="1440" height="778" frameborder="0" scrolling="no" id="videoFrame"> </iframe>
     	<script>
         function updateVideoFeed() {
-            $.get( "/feed/${feed.owner.username}/${feed.name}/", function( xml ) {
+            url = ${ "\"/feed/_all\"" if feed.all else "\"/feed/%s/%s/\"" %(feed.owner.username, feed.name)}
+            $.get( url, function( xml ) {
               xmlDoc = $.parseXML( xml );
               xml = $( xmlDoc );
               url = xml.find("url").text();

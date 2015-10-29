@@ -24,6 +24,8 @@
                   console.log("New video URL " + url);
                   vf.attr("src", url);
               }
+            })
+            .always(function() {
               setTimeout(updateVideoFeed, 5000);
             });
         }

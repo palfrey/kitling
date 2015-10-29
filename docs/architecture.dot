@@ -1,0 +1,17 @@
+digraph archictecture {
+	rankdir=LR;
+	//ranksep=0;
+	//rank="same"
+	splines=true;
+	frontend [label = "Frontend (Django)" pos="0,0"]
+	database [label = "PostgreSQL" pos="150,0"]
+	comparer [label = "Comparer (Rust)" pos="300,0"]
+	imager [label = "Imager (Falcon)" pos="475,0"]
+	cloud [ label="The Internet" shape=none, image="cloud.png" labelloc=b color="#ffffff" fixedsize=True width=1 height=1
+	 pos="600,0"]
+
+	frontend -> database
+	comparer -> database
+	comparer -> imager
+	imager -> cloud
+}

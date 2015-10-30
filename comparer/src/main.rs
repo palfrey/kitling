@@ -106,12 +106,19 @@ fn main() {
         options.push(("url".to_string(), &url));
         let data: &str = &url::form_urlencoded::serialize(&options);
 
-        let mut resp = Client::new()
+        let raw_resp = Client::new()
                            .post(imager_url)
                            .header(ContentType::form_url_encoded())
                            .body(data)
-                           .send()
-                           .unwrap();
+                           .send();
+
+        if raw_resp.is_err() {
+            warn!("Can't connect to imager");
+            thread::sleep_ms(check_ms);
+            continue;
+        }
+
+        let mut resp = raw_resp.unwrap();
 
         if resp.status != StatusCode::Ok {
             warn!("{:?}", resp.status_raw());

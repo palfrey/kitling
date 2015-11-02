@@ -62,5 +62,8 @@ def feed_core(video):
 	elif loc == "www.ustream.tv":
 		url = "%s?html5ui=1&autoplay=true" % video.url
 		return render_to_response("feed.xml", {"url": url} )
+	elif loc == "www.youtube.com":
+		url = "%s?autoplay=1" % video.url
+		return render_to_response("feed.xml", {"url": url} )
 	else:
 		return HttpResponseBadRequest("Don't know what to do with host '%s' from %s" % (loc, video.url))

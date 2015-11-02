@@ -16,6 +16,9 @@ class StreamResource:
 		},
 		"www.ustream.tv" : {
 			"path": "//video[@id='UViewer']"
+		},
+		"www.youtube.com": {
+			"path": "//div[@id='player']"
 		}
 	}
 

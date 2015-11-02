@@ -8,14 +8,23 @@ import urlparse
 from re import compile
 from json import dumps
 
+def livestream(driver):
+	patt = compile("app-argument=http://livestream.com/accounts/(\d+)/events/(\d+)")
+	return patt.search(driver.page_source).groups()
+
+def ustream(driver):
+	element = driver.find_element_by_xpath("//video[@id='UViewer']")
+	return element.get_attribute("src")
+
 class StreamResource:
 	patterns = {
 		"livestream.com" : {
 			"path" : "//div[@id='image-container']/img",
-			"extra": compile("app-argument=http://livestream.com/accounts/(\d+)/events/(\d+)")
+			"extra": livestream
 		},
 		"www.ustream.tv" : {
-			"path": "//video[@id='UViewer']"
+			"path": "//video[@id='UViewer']",
+			"extra": ustream
 		},
 		"www.youtube.com": {
 			"path": "//div[@id='player']"
@@ -45,7 +54,7 @@ class StreamResource:
 			open("dump.txt","wb").write(self.driver.page_source.encode("utf-8"))
 			raise
 		if settings.has_key("extra"):
-			extra = settings["extra"].search(self.driver.page_source).groups()
+			extra = settings["extra"](self.driver)
 			resp.append_header("X-Extra", dumps(extra))
 		ss = self.driver.get_screenshot_as_png()
 		im = Image.open(StringIO(ss))

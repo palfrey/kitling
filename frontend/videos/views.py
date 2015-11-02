@@ -44,10 +44,10 @@ def all_display(request):
 
 def feed(request, username, feedName):
 	feed = Feed.objects.get(owner__username__iexact = username, name__iexact = feedName)
-	return feed_core(feed.videos.order_by("-motion").first())
+	return feed_core(feed.videos.filter(working__exact = True).order_by("-motion").first())
 
 def all_feeds(request):
-	return feed_core(Video.objects.order_by("-motion").first())
+	return feed_core(Video.objects.filter(working__exact = True).order_by("-motion").first())
 
 def feed_core(video):
 	if video == None:

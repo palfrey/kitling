@@ -66,6 +66,8 @@ fn main() {
     let update_stmt = prepare_statement(&conn,
                                         "update videos_video set working = true, hash = $1, \
                                          motion = $2, \"lastRetrieved\" = $3, extra = $4 where id = $5");
+    let not_working_stmt = prepare_statement(&conn,
+                                     "update videos_video set working = false, \"lastRetrieved\" = $1 where id = $2");
 
     info!("Connected to Postgres and ready to update video...");
     loop {
@@ -122,6 +124,8 @@ fn main() {
 
         if resp.status != StatusCode::Ok {
             warn!("{:?}", resp.status_raw());
+            let now = time::now().to_timespec();
+            not_working_stmt.execute(&[&now, &id]).unwrap();
             thread::sleep_ms(check_ms);
             continue;
         }

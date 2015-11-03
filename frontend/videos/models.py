@@ -10,6 +10,7 @@ class Video(models.Model):
 	motion = models.FloatField(default = 0.0)
 	hash = models.CharField(max_length = 100, null = True, default = None)
  	extra = JSONField(default = {}, blank=True)
+	streamURL = models.CharField(max_length = 2048, null = True, blank = True)
 
 	def __unicode__(self):
 		return self.url

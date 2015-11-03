@@ -8,6 +8,7 @@ import urlparse
 from re import compile
 from json import dumps
 import sys
+import livestreamer
 
 def livestream(driver):
 	patt = compile("app-argument=http://livestream.com/accounts/(\d+)/events/(\d+)")
@@ -95,6 +96,10 @@ class StreamResource:
 				cropped.save(out, format='png')
 			except Exception, e:
 				raise Exception, ("save failure", box, r), sys.exc_info()[2]
+
+			streams = livestreamer.streams(url)
+			if streams.has_key("best"):
+				resp.append_header("X-Stream", streams['best'].url)
 			resp.body = out.getvalue()
 			resp.status = falcon.HTTP_200
 			resp.content_type = "image/png"

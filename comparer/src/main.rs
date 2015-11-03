@@ -23,6 +23,7 @@ use postgres::stmt::Statement;
 use std::fs::File;
 
 header! { (XExtra, "X-Extra") => [String] }
+header! { (XStream, "X-Stream") => [String] }
 
 fn prepare_statement<'a>(conn: &'a Connection, stmt: &str) -> Statement<'a> {
     loop {
@@ -65,7 +66,7 @@ fn main() {
                                         asc limit 1");
     let update_stmt = prepare_statement(&conn,
                                         "update videos_video set working = true, hash = $1, \
-                                         motion = $2, \"lastRetrieved\" = $3, extra = $4 where id = $5");
+                                         motion = $2, \"lastRetrieved\" = $3, extra = $4, \"streamURL\" = $5 where id = $6");
     let not_working_stmt = prepare_statement(&conn,
                                      "update videos_video set working = false, \"lastRetrieved\" = $1 where id = $2");
 
@@ -135,6 +136,11 @@ fn main() {
             None => "{}".to_string()
         };
 
+        let stream: String = match resp.headers.get::<XStream>() {
+            Some(val) => val.to_string(),
+            None => "".to_string()
+        };
+
         let mut buf = Vec::new();
         resp.read_to_end(&mut buf).unwrap();
         let image = image::load_from_memory_with_format(&buf, ImageFormat::PNG).unwrap();
@@ -152,7 +158,7 @@ fn main() {
         };
         debug!("Difference {}", motion);
         let now = time::now().to_timespec();
-        match update_stmt.execute(&[&hash.to_base64(), &motion, &now, &extra, &id]) {
+        match update_stmt.execute(&[&hash.to_base64(), &motion, &now, &extra, &stream, &id]) {
             Ok(_) => info!("Updated {} with motion {}", url, motion),
             Err(err) => warn!("Error executing update: {:?}", err),
         }

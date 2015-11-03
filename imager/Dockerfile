@@ -3,7 +3,17 @@ RUN echo "deb http://archive.ubuntu.com/ubuntu vivid multiverse\n" >> /etc/apt/s
 ENV DEBIAN_FRONTEND noninteractive
 RUN apt-get update
 
-RUN apt-get install -fy xvfb firefox python-pip python-dev libjpeg-dev zlib1g-dev && apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+RUN apt-get install -fy \
+	xvfb \
+	firefox \
+	python-pip \
+	python-dev \
+	libjpeg-dev \
+	zlib1g-dev \
+	ubuntu-restricted-extras \
+	&& apt-get clean \
+	&& rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
 WORKDIR /imager
 ADD requirements.txt /imager/requirements.txt
 RUN pip install -r /imager/requirements.txt

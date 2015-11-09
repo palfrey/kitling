@@ -19,4 +19,4 @@ ADD requirements.txt /imager/requirements.txt
 RUN pip install -r /imager/requirements.txt
 ADD image.py /imager/image.py
 EXPOSE 8000
-CMD xvfb-run -e /imager/error.log gunicorn --bind 0.0.0.0:8000 --reload image:app
+CMD xvfb-run -a -e /imager/error.log gunicorn --bind 0.0.0.0:8000 --timeout 120 --reload image:app

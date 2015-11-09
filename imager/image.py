@@ -41,10 +41,11 @@ class StreamResource:
 	}
 
 	def rebuild_drivers(self):
+		print "rebuild started"
 		self.drivers = {}
-
 		profile = webdriver.FirefoxProfile()
 		profile.set_preference("general.useragent.override","Mozilla/5.0 (iPhone; CPU iPhone OS 8_4_1 like Mac OS X) AppleWebKit/600.1.4 (KHTML, like Gecko) GSA/8.0.57838 Mobile/12H321 Safari/600.1.4")
+		profile.set_preference("webdriver.log.file", "/imager/firefox_iphone.log");
 		self.drivers["iphone"] = webdriver.Firefox(profile)
 		self.drivers["iphone"].set_window_size(1024, 768)
 
@@ -55,6 +56,7 @@ class StreamResource:
 		profile.set_preference("media.fragmented-mp4.ffmpeg.enabled", True)
 		self.drivers["default"] = webdriver.Firefox(profile)
 		self.drivers["default"].set_window_size(1024, 768)
+		print "rebuild complete"
 
 	def __init__(self):
 		self.rebuild_drivers()
@@ -104,7 +106,7 @@ class StreamResource:
 			resp.status = falcon.HTTP_200
 			resp.content_type = "image/png"
 		except Exception:
-			self.rebuild_drivers()
+			#self.rebuild_drivers()
 			raise
 
 app = falcon.API()

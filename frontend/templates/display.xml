@@ -9,20 +9,33 @@
 		}
 	</style>
 	<script src="//code.jquery.com/jquery-2.1.4.min.js" />
+    <script src="//cdn.rawgit.com/cowboy/jquery-bbq/master/jquery.ba-bbq.min.js" />
     <h2 py:if="feed.videos.count() == 0">No videos for '${feed.name}'!</h2>
     <py:if test="feed.videos.count() > 0">
     	<iframe src="" width="1440" height="778" frameborder="0" scrolling="no" id="videoFrame"> </iframe>
     	<script>
+        params = $.deparam.querystring();
+
         function updateVideoFeed() {
             url = ${ "\"/feed/_all\"" if feed.all else "\"/feed/%s/%s/\"" %(feed.owner.username, feed.name)}
             $.get( url, function( xml ) {
               xmlDoc = $.parseXML( xml );
               xml = $( xmlDoc );
-              url = xml.find("url").text();
               vf = $( "#videoFrame" );
-              if (vf.attr("src") != url) {
-                  console.log("New video URL " + url);
-                  vf.attr("src", url);
+              if ('stream' in params) {
+                  page = "${static('flashls.html')}?url=" + encodeURIComponent(xml.find("streamURL").text());
+                  console.log(page);
+                  if (vf.attr("src") != page) {
+                      console.log("New video URL " + page);
+                      vf.attr("src", page);
+                  }
+              }
+              else {
+                  url = xml.find("url").text();
+                  if (vf.attr("src") != url) {
+                      console.log("New video URL " + url);
+                      vf.attr("src", url);
+                  }
               }
             })
             .always(function() {

@@ -1,0 +1,22 @@
+
+<script type="text/javascript" src="http://cdn.clappr.io/latest/clappr.min.js"></script>
+<script type="text/javascript" src="http://cdn.jsdelivr.net/clappr.rtmp/latest/rtmp.min.js">
+</script>
+<div id="player"></div>
+<script>
+	console.log("hello world");
+	$(document).ready(function() {
+		params = $.deparam.querystring();
+		console.log(params["url"]);
+		// "/grabber?url=" + encodeURIComponent(params["url"])
+		var player = new Clappr.Player({
+			source: params["url"] ,
+			parentId: "#player",
+			autoPlay: true,
+			preload: 'none',
+			chromeless: true,
+			plugins: {'playback': [RTMP]}
+		});
+		player.on("PLAYER_ERROR", console.log)
+	});
+</script>

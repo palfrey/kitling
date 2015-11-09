@@ -1,0 +1,23 @@
+<html>
+    <head>
+
+        <script src="//cdn.rawgit.com/dailymotion/hls.js/master/dist/hls.min.js"></script>
+        <script src="//code.jquery.com/jquery-2.1.4.min.js"></script>
+        <script src="//cdn.rawgit.com/cowboy/jquery-bbq/master/jquery.ba-bbq.min.js"></script>
+    </head>
+    <body>
+        <video id="video"></video>
+        <script>
+          if(Hls.isSupported()) {
+            var video = document.getElementById('video');
+            var hls = new Hls();
+            params = jQuery.deparam.querystring();
+            hls.loadSource("/grabber?url=" + encodeURIComponent(params["url"]));
+            hls.attachVideo(video);
+            hls.on(Hls.Events.MANIFEST_PARSED,function() {
+              video.play();
+          });
+         }
+        </script>
+    </body>
+</html>

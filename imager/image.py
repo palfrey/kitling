@@ -41,6 +41,14 @@ class StreamResource:
 	}
 
 	def rebuild_drivers(self):
+		for driver in self.drivers.values():
+			try:
+				print "killing", driver
+				driver.quit()
+			except Exception, e:
+				print "issues closing down", driver
+				print e
+
 		self.drivers = {}
 
 		profile = webdriver.FirefoxProfile()
@@ -57,6 +65,7 @@ class StreamResource:
 		self.drivers["default"].set_window_size(1024, 768)
 
 	def __init__(self):
+		self.drivers = {}
 		self.rebuild_drivers()
 
 	def on_post(self, req, resp):

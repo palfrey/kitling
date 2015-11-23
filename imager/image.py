@@ -41,33 +41,40 @@ class StreamResource:
 	}
 
 	def rebuild_drivers(self):
-		for driver in self.drivers.values():
+		while True:
+			for driver in self.drivers.values():
+				try:
+					print "killing", driver
+					driver.quit()
+				except Exception, e:
+					print "issues closing down", driver
+					print e
+
+			def getProfile():
+				profile = webdriver.FirefoxProfile()
+				profile.set_preference("app.update.autoUpdateEnabled", False)
+				profile.set_preference("app.update.enabled", False);
+				return profile
+
 			try:
-				print "killing", driver
-				driver.quit()
+				self.drivers = {}
+				profile = getProfile()
+				profile.set_preference("general.useragent.override","Mozilla/5.0 (iPhone; CPU iPhone OS 8_4_1 like Mac OS X) AppleWebKit/600.1.4 (KHTML, like Gecko) GSA/8.0.57838 Mobile/12H321 Safari/600.1.4")
+				self.drivers["iphone"] = webdriver.Firefox(profile)
+				self.drivers["iphone"].set_window_size(1024, 768)
+
+				profile = getProfile()
+				profile.set_preference("media.mediasource.enabled", True)
+				profile.set_preference("media.mediasource.ignore_codecs", True)
+				profile.set_preference("media.fragmented-mp4.exposed", True)
+				profile.set_preference("media.fragmented-mp4.ffmpeg.enabled", True)
+				self.drivers["default"] = webdriver.Firefox(profile)
+				self.drivers["default"].set_window_size(1024, 768)
+				break
 			except Exception, e:
-				print "issues closing down", driver
-				print e
-
-		def getProfile():
-			profile = webdriver.FirefoxProfile()
-			profile.set_preference("app.update.autoUpdateEnabled", False)
-			profile.set_preference("app.update.enabled", False);
-			return profile
-
-		self.drivers = {}
-		profile = getProfile()
-		profile.set_preference("general.useragent.override","Mozilla/5.0 (iPhone; CPU iPhone OS 8_4_1 like Mac OS X) AppleWebKit/600.1.4 (KHTML, like Gecko) GSA/8.0.57838 Mobile/12H321 Safari/600.1.4")
-		self.drivers["iphone"] = webdriver.Firefox(profile)
-		self.drivers["iphone"].set_window_size(1024, 768)
-
-		profile = getProfile()
-		profile.set_preference("media.mediasource.enabled", True)
-		profile.set_preference("media.mediasource.ignore_codecs", True)
-		profile.set_preference("media.fragmented-mp4.exposed", True)
-		profile.set_preference("media.fragmented-mp4.ffmpeg.enabled", True)
-		self.drivers["default"] = webdriver.Firefox(profile)
-		self.drivers["default"].set_window_size(1024, 768)
+				print "Error while loading Firefox", e
+				print "Waiting 5 seconds..."
+				time.sleep(5)
 
 	def __init__(self):
 		self.drivers = {}

@@ -8,7 +8,7 @@ class Video(models.Model):
 	working = models.BooleanField(default = False)
 	lastRetrieved = models.DateTimeField(default = datetime.min)
 	motion = models.FloatField(default = 0.0)
-	hash = models.CharField(max_length = 100, null = True, default = None)
+	hash = models.CharField(max_length = 100, null = True, blank=True, default = None)
  	extra = JSONField(default = {}, blank=True)
 	streamURL = models.CharField(max_length = 2048, null = True, blank = True)
 

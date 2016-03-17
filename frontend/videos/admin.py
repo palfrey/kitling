@@ -2,7 +2,7 @@ from django.contrib import admin
 from models import *
 
 class VideoAdmin(admin.ModelAdmin):
-    list_display = ('url','working', 'lastRetrieved', 'motion')
+    list_display = ('url','working', 'lastRetrieved', 'corrected_motion')
 
 admin.site.register(Video, VideoAdmin)
 

@@ -4,6 +4,7 @@ from serialisers import *
 from models import *
 import urlparse
 from django.http import HttpResponseBadRequest
+from django.db.models import F
 
 from django_genshi import render_to_response
 
@@ -42,12 +43,14 @@ def all_display(request):
 
 	return render_to_response("display.xml", {"feed": AllFeed() } )
 
+feed_order = (F('motion') + F('offset')).desc()
+
 def feed(request, username, feedName):
 	feed = Feed.objects.get(owner__username__iexact = username, name__iexact = feedName)
-	return feed_core(feed.videos.filter(working__exact = True).order_by("-motion").first())
+	return feed_core(feed.videos.filter(working__exact = True).order_by(feed_order).first())
 
 def all_feeds(request):
-	return feed_core(Video.objects.filter(working__exact = True).order_by("-motion").first())
+	return feed_core(Video.objects.filter(working__exact = True).order_by(feed_order).first())
 
 def feed_core(video):
 	if video == None:

@@ -4,7 +4,7 @@ version = "0.1.0"
 dependencies = [
  "hyper 0.6.15 (registry+https://github.com/rust-lang/crates.io-index)",
  "image 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "img_hash 1.0.0 (git+https://github.com/cybergeek94/img_hash)",
+ "img_hash 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "log 0.3.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "log4rs 0.3.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "postgres 0.10.0 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -148,7 +148,7 @@ dependencies = [
 [[package]]
 name = "img_hash"
 version = "1.0.0"
-source = "git+https://github.com/cybergeek94/img_hash#f84db21e17d89b294a7a2d5b71b9444c5be8458e"
+source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "bit-vec 0.4.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "image 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)",

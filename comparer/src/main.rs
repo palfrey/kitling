@@ -21,6 +21,7 @@ use std::io::Read;
 use hyper::status::StatusCode;
 use postgres::stmt::Statement;
 use std::fs::File;
+use url::form_urlencoded;
 
 header! { (XExtra, "X-Extra") => [String] }
 header! { (XStream, "X-Stream") => [String] }
@@ -61,7 +62,7 @@ fn main() {
 
     log4rs::init_file("log.toml", Default::default()).unwrap();
     let db_url: &str = &env::var("DATABASE_URL").unwrap();
-    let conn = Connection::connect(db_url, &SslMode::None).unwrap();
+    let conn = Connection::connect(db_url, SslMode::None).unwrap();
 
     let query_stmt = prepare_statement(&conn,
                                        "select * from videos_video order by \"lastRetrieved\" \
@@ -89,9 +90,9 @@ fn main() {
         }
         let item = items.get(0);
         let url: String = item.get("url");
-        let when: postgres::Result<Timespec> = item.get_opt("lastRetrieved");
+        let when: postgres::Result<Timespec> = item.get_opt("lastRetrieved").unwrap();
         let id: i32 = item.get("id");
-        let old_hash: postgres::Result<String> = item.get_opt("hash");
+        let old_hash: postgres::Result<String> = item.get_opt("hash").unwrap();
 
         if when.is_err() {
             debug!("Item: {}, When: never", url);
@@ -107,14 +108,14 @@ fn main() {
         }
         info!("Updating {}", url);
 
-        let mut options = vec![];
-        options.push(("url".to_string(), &url));
-        let data: &str = &url::form_urlencoded::serialize(&options);
+        let data: String = form_urlencoded::Serializer::new(String::new())
+            .append_pair("url", &url)
+            .finish();
 
         let raw_resp = Client::new()
                            .post(imager_url)
                            .header(ContentType::form_url_encoded())
-                           .body(data)
+                           .body(&data)
                            .send();
 
         if raw_resp.is_err() {

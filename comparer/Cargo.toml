@@ -5,11 +5,11 @@ authors = ["Tom Parker <palfrey@tevp.net>"]
 
 [dependencies]
 image = "*"
-postgres = {version = "0.10", features=["time"]}
+postgres = {version = ">= 0.10", features=["time"]}
 log = "*"
-log4rs = "0.3.3"
-time = "0.1.35"
-hyper = "0.6.15"
-url = "0.2.37"
-toml = "0.1.23"
+log4rs = {version = ">= 0.3.3", features=["toml"]}
+time = ">= 0.1.35"
+hyper = ">= 0.6.15"
+url = ">= 0.2.37"
+toml = ">= 0.1.23"
 img_hash = {version = "1.0.0", features=["rust-image"]}

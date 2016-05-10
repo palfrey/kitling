@@ -1,4 +1,4 @@
-FROM jimmycuadra/rust:1.5.0
+FROM jimmycuadra/rust:1.8.0
 ENV RUST_BACKTRACE=1
 WORKDIR /comparer
 ADD src/ /comparer/src

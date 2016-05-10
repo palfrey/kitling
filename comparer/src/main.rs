@@ -83,7 +83,7 @@ fn main() {
         }
 
         let items = res.unwrap();
-        if items.len() == 0 {
+        if items.is_empty() {
             warn!("No video feeds");
             thread::sleep(check_ms);
             continue;

@@ -32,7 +32,7 @@ fn prepare_statement<'a>(conn: &'a Connection, stmt: &str) -> Statement<'a> {
             error!("Error in prepare for '{}': {}",
                    stmt,
                    prep_stmt.unwrap_err());
-            thread::sleep_ms(4000);
+            thread::sleep(Duration::seconds(4).to_std().unwrap());
             continue;
         }
         return prep_stmt.unwrap();
@@ -55,7 +55,9 @@ fn main() {
                                                       .as_str()
                                                       .unwrap()) +
                              &String::from("/streams"));
-    let check_ms = config_table.lookup("check_ms").unwrap().as_integer().unwrap() as u32;
+    let check_ms = Duration::milliseconds(
+        config_table.lookup("check_ms").unwrap().as_integer().unwrap())
+        .to_std().unwrap();
 
     log4rs::init_file("log.toml", Default::default()).unwrap();
     let db_url: &str = &env::var("DATABASE_URL").unwrap();
@@ -75,14 +77,14 @@ fn main() {
         let res = query_stmt.query(&[]);
         if res.is_err() {
             error!("Error in query: {}", res.unwrap_err());
-            thread::sleep_ms(check_ms);
+            thread::sleep(check_ms);
             continue;
         }
 
         let items = res.unwrap();
         if items.len() == 0 {
             warn!("No video feeds");
-            thread::sleep_ms(check_ms);
+            thread::sleep(check_ms);
             continue;
         }
         let item = items.get(0);
@@ -99,7 +101,7 @@ fn main() {
             debug!("Item: {}, When: {}", url, diff);
             if diff < interval {
                 debug!("oldest item is young: {}", diff);
-                thread::sleep_ms(check_ms);
+                thread::sleep(check_ms);
                 continue;
             }
         }
@@ -117,7 +119,7 @@ fn main() {
 
         if raw_resp.is_err() {
             warn!("Can't connect to imager");
-            thread::sleep_ms(check_ms);
+            thread::sleep(check_ms);
             continue;
         }
 
@@ -127,7 +129,7 @@ fn main() {
             warn!("{:?}", resp.status_raw());
             let now = time::now().to_timespec();
             not_working_stmt.execute(&[&now, &id]).unwrap();
-            thread::sleep_ms(check_ms);
+            thread::sleep(check_ms);
             continue;
         }
 

@@ -1,0 +1,12 @@
+[package]
+name = "kitling-imager"
+version = "0.1.0"
+authors = ["Tom Parker <palfrey@tevp.net>"]
+
+[dependencies]
+image = "*"
+log = "*"
+log4rs = {version = ">= 0.3.3", features=["toml"]}
+pencil = "0.2.0"
+hyper = "*"
+url = "*"

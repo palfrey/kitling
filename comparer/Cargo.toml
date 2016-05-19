@@ -1,5 +1,5 @@
 [package]
-name = "kitling"
+name = "kitling-comparer"
 version = "0.1.0"
 authors = ["Tom Parker <palfrey@tevp.net>"]
 

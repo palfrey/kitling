@@ -10,3 +10,5 @@ log4rs = {version = ">= 0.3.3", features=["toml"]}
 pencil = "0.2.0"
 hyper = "*"
 url = "*"
+webdriver = "*"
+rustc-serialize = "0.3"

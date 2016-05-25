@@ -9,7 +9,5 @@ kind = "console"
 level = "debug"
 appenders = ["stdout"]
 
-# debug for the main app, but not other things
-#[[logger]]
-# name = "kitling"
-# level = "debug"
+[loggers."hyper"]
+level = "info"

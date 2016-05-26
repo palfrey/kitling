@@ -14,11 +14,7 @@ use std::io::Read;
 extern crate url;
 use url::form_urlencoded;
 
-extern crate core;
-use core::ops::Deref;
-
 extern crate webdriver;
-use webdriver::error::{ErrorStatus, WebDriverError};
 use webdriver::response::{WebDriverResponse, ValueResponse};
 use std::time;
 use std::thread;
@@ -33,41 +29,34 @@ use std::io::Cursor;
 mod chromedriver;
 
 fn streams(request: &mut Request) -> PencilResult {
-    let mut buffer = String::new();
-    request.request.read_to_string(&mut buffer);
-    let mut parse = form_urlencoded::parse(buffer.as_bytes());
-    let url = match parse.find(|k| k.0 == "url") {
-        Some((_, value)) => value,
-        None => return Err(PenHTTPError(BadRequest)),
-    };
-    Ok(Response::from("Hello World!"))
-}
-
-fn main() {
-    log4rs::init_file("log.toml", Default::default()).unwrap();
-
     let client = chromedriver::Webdriver::new();
     let session = client.make_session();
-    session.goto_url("http://livestream.com/tinykittens/savina".to_string());
+
+    let mut buffer = String::new();
+    request.request.read_to_string(&mut buffer).unwrap();
+    let mut parse = form_urlencoded::parse(buffer.as_bytes());
+    let url = match parse.find(|k| k.0 == "url") {
+        Some((_, value)) => value.into_owned(),
+        None => return Err(PenHTTPError(BadRequest)),
+    };
+    session.goto_url(url);
     thread::sleep(time::Duration::from_secs(5));
     let element: ValueResponse =
         match session.find_element_by_xpath("//div[@id='image-container']/img".to_string()) {
                 Err(val) => {
                     warn!("Error while trying to get element: {:?}", val);
-                    Err(WebDriverError::new(ErrorStatus::UnknownError, val.to_json_string()))
+                    return Err(PenHTTPError(BadRequest));
                 }
                 Ok(val) => {
                     match val {
-                        WebDriverResponse::Generic(obj) => Ok(obj),
+                        WebDriverResponse::Generic(obj) => obj,
                         _ => {
                             warn!("Didn't expect {:?}", val);
-                            Err(WebDriverError::new(ErrorStatus::UnknownError,
-                                                    val.to_json_string()))
+                            return Err(PenHTTPError(BadRequest));
                         }
                     }
                 }
-            }
-            .unwrap();
+            };
     let element_location =
         session.get_element_location(&element).unwrap().find("value").expect("value").clone();
     let element_size =
@@ -84,14 +73,19 @@ fn main() {
 		element_location.find("y").expect("y").as_u64().expect("numeric y") as u32,
 		element_size.find("width").expect("width").as_u64().expect("numeric width") as u32,
 		element_size.find("height").expect("height").as_u64().expect("numeric height") as u32);
-    let mut cropped_file = File::create("cropped.png").unwrap();
-    cropped.save(&mut cropped_file, image::ImageFormat::PNG).unwrap();
 
-    // page_source(&mut client, &session_id);
+    let mut output_buffer: Vec<u8> = Vec::new();
+    cropped.save(&mut output_buffer, image::ImageFormat::PNG).unwrap();
+    let mut response = Response::from(output_buffer);
+    response.set_content_type("image/png");
+    Ok(response)
+}
 
-    // let mut app = Pencil::new("");
-    // app.set_debug(true);
-    // app.set_log_level();
-    // app.post("/streams", "streams", streams);
-    // app.run("127.0.0.1:8000");
+fn main() {
+    log4rs::init_file("log.toml", Default::default()).unwrap();
+    let mut app = Pencil::new("");
+    app.set_debug(true);
+    app.set_log_level();
+    app.post("/streams", "streams", streams);
+    app.run("127.0.0.1:8000");
 }

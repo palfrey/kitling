@@ -11,3 +11,6 @@ appenders = ["stdout"]
 
 [loggers."hyper"]
 level = "info"
+
+[loggers."mime"]
+level = "info"

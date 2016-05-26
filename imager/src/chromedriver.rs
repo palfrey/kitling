@@ -71,7 +71,7 @@ impl<'a> Webdriver<'a> {
     pub fn new() -> Webdriver<'a> {
         let chromedriver_path = match env::var("CHROMEDRIVER") {
             Ok(val) => val,
-            Err(e) => "./chromedriver".to_string(),
+            Err(_) => "./chromedriver".to_string(),
         };
         info!("Using {} as chromedriver path", chromedriver_path);
 

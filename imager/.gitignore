@@ -2,3 +2,6 @@ error.log
 dump.txt
 ENV
 target/
+*.bk
+*.png
+chromedriver

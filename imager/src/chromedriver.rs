@@ -11,6 +11,7 @@ use rustc_serialize::json::{Json, ToJson};
 use rustc_serialize::base64::{FromBase64Error, FromBase64};
 
 use std::process::{Command, Child};
+use std::env;
 
 pub struct Webdriver<'a> {
     client: hyper::client::Client,
@@ -68,10 +69,16 @@ trait DoesPost<'a> {
 
 impl<'a> Webdriver<'a> {
     pub fn new() -> Webdriver<'a> {
-        let child = Command::new("./chromedriver")
+        let chromedriver_path = match env::var("CHROMEDRIVER") {
+            Ok(val) => val,
+            Err(e) => "./chromedriver".to_string(),
+        };
+        info!("Using {} as chromedriver path", chromedriver_path);
+
+        let child = Command::new(&chromedriver_path)
             .arg("--port=9516")
             .spawn()
-            .expect("spawned child");
+            .expect(&format!("spawning chromedriver from {}", &chromedriver_path));
         Webdriver {
             client: hyper::client::Client::new(),
             host: "localhost",

@@ -16,8 +16,8 @@ pub struct Webdriver {
     client: hyper::client::Client,
 }
 
-pub struct WebdriverSession {
-    client: hyper::client::Client,
+pub struct WebdriverSession<'a> {
+    webdriver: &'a Webdriver,
     session_id: String,
 }
 
@@ -43,8 +43,8 @@ fn decode_response(json_str: &str) -> WebDriverResult<Json> {
     };
 }
 
-trait DoesPost {
-    fn do_post(&self, url: &str, body: &String) -> WebDriverResult<Json> {
+trait DoesPost<'a> {
+    fn do_post(&'a self, url: &str, body: &String) -> WebDriverResult<Json> {
         debug!("Request: {:?}", body);
         let mut res = self.client()
             .post(url)
@@ -60,7 +60,7 @@ trait DoesPost {
         return decoded;
     }
 
-    fn client(&self) -> &hyper::client::Client;
+    fn client(&'a self) -> &'a hyper::client::Client;
 }
 
 impl Webdriver {
@@ -86,24 +86,24 @@ impl Webdriver {
             .expect("string session id")
             .to_string();
         WebdriverSession {
-            client: hyper::client::Client::new(),
+            webdriver: self,
             session_id: session_id,
         }
     }
 }
 
-impl DoesPost for Webdriver {
-    fn client(&self) -> &hyper::client::Client {
+impl<'a> DoesPost<'a> for Webdriver {
+    fn client(&'a self) -> &'a hyper::client::Client {
         &self.client
     }
 }
-impl DoesPost for WebdriverSession {
-    fn client(&self) -> &hyper::client::Client {
-        &self.client
+impl<'a> DoesPost<'a> for WebdriverSession<'a> {
+    fn client(&'a self) -> &'a hyper::client::Client {
+        &self.webdriver.client()
     }
 }
 
-impl Drop for WebdriverSession {
+impl <'a>Drop for WebdriverSession<'a> {
     fn drop(&mut self) {
         self.client()
             .delete(&format!("http://localhost:9516/session/{}", self.session_id))
@@ -112,7 +112,7 @@ impl Drop for WebdriverSession {
     }
 }
 
-impl WebdriverSession {
+impl <'a>WebdriverSession<'a> {
     pub fn goto_url(&self, url: String) {
         let params = GetParameters { url: url };
         self.client()

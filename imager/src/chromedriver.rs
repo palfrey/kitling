@@ -12,12 +12,14 @@ use rustc_serialize::json::ToJson;
 use rustc_serialize::base64::FromBase64Error;
 use rustc_serialize::base64::FromBase64;
 
-pub struct Webdriver {
+pub struct Webdriver<'a> {
     client: hyper::client::Client,
+    host: &'a str,
+    port: u32
 }
 
 pub struct WebdriverSession<'a> {
-    webdriver: &'a Webdriver,
+    webdriver: &'a Webdriver<'a>,
     session_id: String,
 }
 
@@ -44,10 +46,10 @@ fn decode_response(json_str: &str) -> WebDriverResult<Json> {
 }
 
 trait DoesPost<'a> {
-    fn do_post(&'a self, url: &str, body: &String) -> WebDriverResult<Json> {
+    fn do_post(&'a self, url: String, body: &String) -> WebDriverResult<Json> {
         debug!("Request: {:?}", body);
         let mut res = self.client()
-            .post(url)
+            .post(&url)
             .body(body)
             .send()
             .unwrap();
@@ -63,9 +65,17 @@ trait DoesPost<'a> {
     fn client(&'a self) -> &'a hyper::client::Client;
 }
 
-impl Webdriver {
-    pub fn new() -> Webdriver {
-        Webdriver { client: hyper::client::Client::new() }
+impl<'a> Webdriver<'a> {
+    pub fn new() -> Webdriver<'a> {
+        Webdriver {
+            client: hyper::client::Client::new(),
+            host: "localhost",
+            port: 9516
+        }
+    }
+
+    pub fn url(&self, rest: &str) -> String {
+        format!("http://{}:{}/session{}", self.host, self.port, rest)
     }
 
     pub fn make_session(&self) -> WebdriverSession {
@@ -78,7 +88,7 @@ impl Webdriver {
         let mut request: json::Object = json::Object::new();
         request.insert("desiredCapabilities".to_string(), desired.to_json());
         let json_str = (&request).to_json().to_string();
-        let decoded = self.do_post("http://localhost:9516/session", &json_str);
+        let decoded = self.do_post(self.url(""), &json_str);
         let session_id = decoded.expect("ok response")
             .find("sessionId")
             .expect("sessionId")
@@ -92,7 +102,7 @@ impl Webdriver {
     }
 }
 
-impl<'a> DoesPost<'a> for Webdriver {
+impl<'a> DoesPost<'a> for Webdriver<'a> {
     fn client(&'a self) -> &'a hyper::client::Client {
         &self.client
     }
@@ -106,17 +116,21 @@ impl<'a> DoesPost<'a> for WebdriverSession<'a> {
 impl <'a>Drop for WebdriverSession<'a> {
     fn drop(&mut self) {
         self.client()
-            .delete(&format!("http://localhost:9516/session/{}", self.session_id))
+            .delete(&self.url(format!("/{}", self.session_id)))
             .send()
             .unwrap();
     }
 }
 
 impl <'a>WebdriverSession<'a> {
+    fn url(&self, rest: String) -> String {
+        self.webdriver.url(&rest)
+    }
+
     pub fn goto_url(&self, url: String) {
         let params = GetParameters { url: url };
         self.client()
-            .post(&format!("http://localhost:9516/session/{}/url", self.session_id))
+            .post(&self.url(format!("/{}/url", self.session_id)))
             .body(&params.to_json().to_string())
             .send()
             .unwrap();
@@ -128,7 +142,7 @@ impl <'a>WebdriverSession<'a> {
             using: LocatorStrategy::XPath,
         };
         let decoded =
-            self.do_post(&format!("http://localhost:9516/session/{}/element", self.session_id),
+            self.do_post(self.url(format!("/{}/element", self.session_id)),
                          &params.to_json().to_string());
         return match decoded {
             Err(val) => Err(val),
@@ -144,10 +158,10 @@ impl <'a>WebdriverSession<'a> {
         let element_id =
             element.value.find("ELEMENT").expect("ELEMENT").as_string().expect("String ELEMENT");
         let mut res = self.client()
-            .get(&format!("http://localhost:9516/session/{}/element/{}/{}",
+            .get(&self.url(format!("/{}/element/{}/{}",
                           self.session_id,
                           element_id,
-                          kind))
+                          kind)))
             .send()
             .unwrap();
         let mut buffer = String::new();
@@ -169,8 +183,8 @@ impl <'a>WebdriverSession<'a> {
 
     pub fn get_screenshot_as_png(&self) -> Result<Vec<u8>, FromBase64Error> {
         let mut res = self.client()
-            .get(&format!("http://localhost:9516/session/{}/screenshot",
-                          self.session_id))
+            .get(&self.url(format!("/{}/screenshot",
+                          self.session_id)))
             .send()
             .unwrap();
         let mut buffer = String::new();

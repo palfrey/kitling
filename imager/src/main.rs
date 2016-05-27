@@ -26,6 +26,8 @@ extern crate rustc_serialize;
 extern crate image;
 use std::io::Cursor;
 
+extern crate get_if_addrs;
+
 mod chromedriver;
 
 fn streams(request: &mut Request) -> PencilResult {
@@ -43,20 +45,20 @@ fn streams(request: &mut Request) -> PencilResult {
     thread::sleep(time::Duration::from_secs(5));
     let element: ValueResponse =
         match session.find_element_by_xpath("//div[@id='image-container']/img".to_string()) {
-                Err(val) => {
-                    warn!("Error while trying to get element: {:?}", val);
-                    return Err(PenHTTPError(BadRequest));
-                }
-                Ok(val) => {
-                    match val {
-                        WebDriverResponse::Generic(obj) => obj,
-                        _ => {
-                            warn!("Didn't expect {:?}", val);
-                            return Err(PenHTTPError(BadRequest));
-                        }
+            Err(val) => {
+                warn!("Error while trying to get element: {:?}", val);
+                return Err(PenHTTPError(BadRequest));
+            }
+            Ok(val) => {
+                match val {
+                    WebDriverResponse::Generic(obj) => obj,
+                    _ => {
+                        warn!("Didn't expect {:?}", val);
+                        return Err(PenHTTPError(BadRequest));
                     }
                 }
-            };
+            }
+        };
     let element_location =
         session.get_element_location(&element).unwrap().find("value").expect("value").clone();
     let element_size =
@@ -81,11 +83,30 @@ fn streams(request: &mut Request) -> PencilResult {
     Ok(response)
 }
 
-fn main() {
-    log4rs::init_file("log.toml", Default::default()).unwrap();
+fn make_app() -> Pencil {
     let mut app = Pencil::new("");
     app.set_debug(true);
     app.set_log_level();
     app.post("/streams", "streams", streams);
-    app.run("127.0.0.1:8000");
+    return app;
+}
+
+fn main() {
+    log4rs::init_file("log.toml", Default::default()).unwrap();
+    let port = 8000;
+    let mut handles = Vec::new();
+    for iface in get_if_addrs::get_if_addrs().unwrap() {
+        handles.push(::std::thread::spawn(move || {
+            let ip = iface.ip();
+            let app = make_app();
+            info!("Listening on {}:{} for {}", ip, port, iface.name);
+            app.run((ip, port));
+        }));
+    }
+
+    info!("All listeners spawned");
+
+    for handle in handles {
+        handle.join().unwrap();
+    }
 }

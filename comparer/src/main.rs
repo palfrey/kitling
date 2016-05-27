@@ -119,6 +119,7 @@ fn main() {
                            .send();
 
         if raw_resp.is_err() {
+            warn!("{:?}", raw_resp.unwrap_err());
             warn!("Can't connect to imager");
             thread::sleep(check_ms);
             continue;

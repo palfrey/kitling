@@ -1,0 +1,4 @@
+target/
+ENV/
+.git/
+*.png

@@ -18,8 +18,6 @@ extern crate webdriver;
 use webdriver::response::{WebDriverResponse, ValueResponse};
 use std::time;
 use std::thread;
-use std::fs::File;
-use std::io::Write;
 
 extern crate rustc_serialize;
 
@@ -39,7 +37,10 @@ fn streams(request: &mut Request) -> PencilResult {
     let mut parse = form_urlencoded::parse(buffer.as_bytes());
     let url = match parse.find(|k| k.0 == "url") {
         Some((_, value)) => value.into_owned(),
-        None => return Err(PenHTTPError(BadRequest)),
+        None => {
+            warn!("No URL in request");
+            return Err(PenHTTPError(BadRequest))
+        }
     };
     session.goto_url(url);
     thread::sleep(time::Duration::from_secs(5));
@@ -64,9 +65,6 @@ fn streams(request: &mut Request) -> PencilResult {
     let element_size =
         session.get_element_size(&element).unwrap().find("value").expect("value").clone();
     let screenshot = session.get_screenshot_as_png().unwrap();
-
-    let mut dump = File::create("foo.png").unwrap();
-    dump.write(&screenshot).unwrap();
 
     let cursor = Cursor::new(&screenshot);
     let mut loaded_image = image::load(cursor, image::ImageFormat::PNG).unwrap();

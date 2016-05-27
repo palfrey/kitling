@@ -18,12 +18,13 @@ RUN apt-get install -fy --force-yes --no-install-recommends \
 
 RUN wget http://chromedriver.storage.googleapis.com/2.21/chromedriver_linux64.zip
 RUN unzip chromedriver_linux64.zip -d /imager
+ADD chromedriver-xvfb.sh /imager
 
 ENV RUST_BACKTRACE=1
-
+ENV CHROMEDRIVER ./chromedriver-xvfb.sh
+EXPOSE 8000
 ADD src/ /imager/src
 ADD Cargo.* /imager/
 RUN cargo build
 ADD log.toml /imager/
-EXPOSE 8000
 CMD cargo run

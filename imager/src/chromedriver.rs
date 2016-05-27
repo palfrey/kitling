@@ -12,11 +12,14 @@ use rustc_serialize::base64::{FromBase64Error, FromBase64};
 
 use std::process::{Command, Child};
 use std::env;
+use std::net::TcpStream;
+use std::time;
+use std::thread;
 
 pub struct Webdriver<'a> {
     client: hyper::client::Client,
     host: &'a str,
-    port: u32,
+    port: u16,
     process: Child,
 }
 
@@ -75,14 +78,28 @@ impl<'a> Webdriver<'a> {
         };
         info!("Using {} as chromedriver path", chromedriver_path);
 
+        let port = 9516;
         let child = Command::new(&chromedriver_path)
-            .arg("--port=9516")
+            .arg(format!("--port={}", port))
             .spawn()
             .expect(&format!("spawning chromedriver from {}", &chromedriver_path));
+
+        loop {
+            let stream = TcpStream::connect(("localhost", port));
+            if stream.is_ok() {
+                debug!("Found chromedriver");
+                break;
+            }
+            else {
+                debug!("Can't connect to chromedriver yet");
+                thread::sleep(time::Duration::from_secs(1));
+            }
+        }
+
         Webdriver {
             client: hyper::client::Client::new(),
             host: "localhost",
-            port: 9516,
+            port: port,
             process: child,
         }
     }
@@ -118,6 +135,7 @@ impl<'a> Webdriver<'a> {
 impl<'a> Drop for Webdriver<'a> {
     fn drop(&mut self) {
         self.process.kill().unwrap();
+        debug!("Killed chromedriver process");
     }
 }
 

@@ -10,6 +10,9 @@ RUN apt-get install -fy --force-yes --no-install-recommends \
 	unzip \
 	chromium \
 	xvfb \
+	libgconf2-4 \
+	libexif12 \
+	xauth \
 	&& apt-get clean \
 	&& rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 

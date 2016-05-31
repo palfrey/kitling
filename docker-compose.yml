@@ -2,8 +2,6 @@ imager:
   build: imager/
   ports:
     - "8001:8000"
-  volumes:
-    - ./imager/:/imager/
 comparer:
   build: comparer/
   links:
@@ -24,8 +22,6 @@ frontend:
   environment:
     - DATABASE_URL=postgres://postgres:mysecretpassword@postgres/postgres
 postgres:
-  image: postgres
-  ports:
-    - "5432:5432"
+  image: postgres:9.4
   environment:
     - POSTGRES_PASSWORD=mysecretpassword

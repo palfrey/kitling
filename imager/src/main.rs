@@ -32,7 +32,7 @@ fn streams(request: &mut Request) -> PencilResult {
     let mut buffer = String::new();
     request.request.read_to_string(&mut buffer).unwrap();
     let mut parse = form_urlencoded::parse(buffer.as_bytes());
-    let url = match parse.find(|k| k.0 == "url") {
+    let mut url = match parse.find(|k| k.0 == "url") {
         Some((_, value)) => value.into_owned(),
         None => {
             warn!("No URL in request");
@@ -50,7 +50,10 @@ fn streams(request: &mut Request) -> PencilResult {
     let xpath = match host {
             "livestream.com" => "//div[@id='image-container']/img",
             "www.ustream.tv" => "//video[@id='UViewer']",
-            "www.youtube.com" => "//div[@id='player']",
+            "www.youtube.com" => {
+                url = url + "?autoplay=1";
+                "//div[@id='player']"
+            }
             _ => {
                 warn!("Request URL host ({}) wasn't in known list: '{}'",
                       host,

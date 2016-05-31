@@ -89,8 +89,7 @@ impl<'a> Webdriver<'a> {
             if stream.is_ok() {
                 debug!("Found chromedriver");
                 break;
-            }
-            else {
+            } else {
                 debug!("Can't connect to chromedriver yet");
                 thread::sleep(time::Duration::from_secs(1));
             }

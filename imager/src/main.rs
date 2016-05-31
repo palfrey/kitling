@@ -29,9 +29,6 @@ extern crate get_if_addrs;
 mod chromedriver;
 
 fn streams(request: &mut Request) -> PencilResult {
-    let client = chromedriver::Webdriver::new();
-    let session = client.make_session();
-
     let mut buffer = String::new();
     request.request.read_to_string(&mut buffer).unwrap();
     let mut parse = form_urlencoded::parse(buffer.as_bytes());
@@ -39,27 +36,49 @@ fn streams(request: &mut Request) -> PencilResult {
         Some((_, value)) => value.into_owned(),
         None => {
             warn!("No URL in request");
-            return Err(PenHTTPError(BadRequest))
+            return Err(PenHTTPError(BadRequest));
         }
     };
-    session.goto_url(url);
-    thread::sleep(time::Duration::from_secs(5));
-    let element: ValueResponse =
-        match session.find_element_by_xpath("//div[@id='image-container']/img".to_string()) {
-            Err(val) => {
-                warn!("Error while trying to get element: {:?}", val);
+    let request_url = match url::Url::parse(&url) {
+        Ok(value) => value,
+        Err(_) => {
+            warn!("Request URL was dodgy: '{}'", url);
+            return Err(PenHTTPError(BadRequest));
+        }
+    };
+    let host = request_url.host_str().unwrap();
+    let xpath = match host {
+            "livestream.com" => "//div[@id='image-container']/img",
+            "www.ustream.tv" => "//video[@id='UViewer']",
+            "www.youtube.com" => "//div[@id='player']",
+            _ => {
+                warn!("Request URL host ({}) wasn't in known list: '{}'",
+                      host,
+                      url);
                 return Err(PenHTTPError(BadRequest));
             }
-            Ok(val) => {
-                match val {
-                    WebDriverResponse::Generic(obj) => obj,
-                    _ => {
-                        warn!("Didn't expect {:?}", val);
-                        return Err(PenHTTPError(BadRequest));
-                    }
+        }
+        .to_string();
+
+    let client = chromedriver::Webdriver::new();
+    let session = client.make_session();
+    session.goto_url(url);
+    thread::sleep(time::Duration::from_secs(5));
+    let element: ValueResponse = match session.find_element_by_xpath(xpath) {
+        Err(val) => {
+            warn!("Error while trying to get element: {:?}", val);
+            return Err(PenHTTPError(BadRequest));
+        }
+        Ok(val) => {
+            match val {
+                WebDriverResponse::Generic(obj) => obj,
+                _ => {
+                    warn!("Didn't expect {:?}", val);
+                    return Err(PenHTTPError(BadRequest));
                 }
             }
-        };
+        }
+    };
     let element_location =
         session.get_element_location(&element).unwrap().find("value").expect("value").clone();
     let element_size =

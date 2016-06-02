@@ -144,6 +144,7 @@ impl Webdriver {
         mobile_emulation.insert("deviceName".to_string(), "Apple iPhone 5".to_json());
         let mut chrome_options: json::Object = json::Object::new();
         chrome_options.insert("mobileEmulation".to_string(), mobile_emulation.to_json());
+        chrome_options.insert("args".to_string(), ["--no-sandbox".to_string()].to_json());
         let mut desired: json::Object = json::Object::new();
         desired.insert("chromeOptions".to_string(), chrome_options.to_json());
         let mut request: json::Object = json::Object::new();

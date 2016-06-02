@@ -1,4 +1,4 @@
-FROM jimmycuadra/rust:1.8.0
+FROM jimmycuadra/rust:1.9.0
 #RUN echo "deb http://archive.ubuntu.com/ubuntu vivid multiverse\n" >> /etc/apt/sources.list
 ENV DEBIAN_FRONTEND noninteractive
 RUN apt-get update

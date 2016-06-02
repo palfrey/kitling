@@ -20,10 +20,9 @@ use std::sync::{Arc, Mutex, MutexGuard};
 use nickel::{Request, Response, Middleware, Continue, MiddlewareResult};
 use plugin::{Pluggable, Extensible};
 use typemap::Key;
-use std::error::Error as StdError;
-use r2d2;
-use std::fmt::Error as FmtError;
-use std::fmt;
+
+use rand;
+use rand::Rng;
 
 pub struct Webdriver {
     client: hyper::client::Client,
@@ -39,7 +38,8 @@ impl Default for Webdriver {
 }
 
 pub struct WebdriverSession {
-    webdriver: Webdriver,
+    client: hyper::client::Client,
+    base_url: String,
     session_id: String,
 }
 
@@ -93,7 +93,24 @@ impl Webdriver {
         };
         info!("Using {} as chromedriver path", chromedriver_path);
 
-        let port = 9516;
+
+        let port: u16 = {
+            let mut rng = rand::thread_rng();
+            let mut candidate: u16;
+            loop {
+                candidate = rng.gen_range(2048, 65535);
+                debug!("Candidate port {}", candidate);
+                let stream = TcpStream::connect(("localhost", candidate));
+                if stream.is_ok() {
+                    debug!("Already used port {}", candidate);
+                } else {
+                    debug!("Good port {}", candidate);
+                    break;
+                }
+            }
+            candidate
+        };
+
         let child = Command::new(&chromedriver_path)
             .arg(format!("--port={}", port))
             .spawn()
@@ -122,7 +139,7 @@ impl Webdriver {
         format!("http://{}:{}/session{}", self.host, self.port, rest)
     }
 
-    pub fn make_session(self) -> WebdriverSession {
+    pub fn make_session(&self) -> WebdriverSession {
         let mut mobile_emulation: json::Object = json::Object::new();
         mobile_emulation.insert("deviceName".to_string(), "Apple iPhone 5".to_json());
         let mut chrome_options: json::Object = json::Object::new();
@@ -140,7 +157,8 @@ impl Webdriver {
             .expect("string session id")
             .to_string();
         WebdriverSession {
-            webdriver: self,
+            client: hyper::client::Client::new(),
+            base_url: self.url(""),
             session_id: session_id,
         }
     }
@@ -153,61 +171,13 @@ impl Drop for Webdriver {
     }
 }
 
-#[derive(Debug)]
-pub struct WebdriverError {}
-
-impl fmt::Display for WebdriverError {
-    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
-        write!(fmt, "{}: {}", self.description(), self.cause().unwrap())
-    }
-}
-
-impl StdError for WebdriverError {
-    fn description(&self) -> &str {
-        "An error"
-    }
-
-    fn cause(&self) -> Option<&StdError> {
-        None
-    }
-}
-
-impl r2d2::ManageConnection for Webdriver {
-    type Connection = WebdriverSession;
-    type Error = WebdriverError;
-    fn connect(&self) -> Result<Self::Connection, Self::Error> {
-        Ok(self.make_session())
-    }
-    fn is_valid(&self, conn: &mut Self::Connection) -> Result<(), Self::Error> {
-        Ok(())
-    }
-    fn has_broken(&self, conn: &mut Self::Connection) -> bool {
-        return false;
-    }
-}
-
-// impl Clone for Webdriver {
-// fn clone(&self) -> Self {
-// Webdriver {
-// client: self.client,
-// port: self.port,
-// host: self.host,
-// process: self.process
-// }
-// }
-// fn clone_from(&mut self, source: &Self)
-// {
-// }
-// }
-
-
 pub struct WebdriverMiddleware {
     pub mutex: Arc<Mutex<Webdriver>>,
 }
 
 impl WebdriverMiddleware {
-    pub fn new(client: Webdriver) -> Result<WebdriverMiddleware, Box<StdError>> {
-        Ok(WebdriverMiddleware { mutex: Arc::new(Mutex::new(client)) })
+    pub fn new(client: Webdriver) -> WebdriverMiddleware {
+        WebdriverMiddleware { mutex: Arc::new(Mutex::new(client)) }
     }
 }
 
@@ -242,7 +212,7 @@ impl DoesPost for Webdriver {
 }
 impl DoesPost for WebdriverSession {
     fn client(&self) -> &hyper::client::Client {
-        &self.webdriver.client()
+        &self.client
     }
 }
 
@@ -257,7 +227,7 @@ impl Drop for WebdriverSession {
 
 impl WebdriverSession {
     fn url(&self, rest: String) -> String {
-        self.webdriver.url(&rest)
+        format!("{}{}", self.base_url, rest)
     }
 
     pub fn goto_url(&self, url: String) {

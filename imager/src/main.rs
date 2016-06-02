@@ -4,7 +4,7 @@ extern crate log4rs;
 
 #[macro_use]
 extern crate nickel;
-use nickel::{Request, Response, MiddlewareResult, NickelError, Nickel, MediaType};
+use nickel::{Request, Response, MiddlewareResult, Nickel, MediaType};
 use nickel::status::StatusCode;
 use nickel::router::http_router::HttpRouter;
 
@@ -21,12 +21,8 @@ use webdriver::response::{WebDriverResponse, ValueResponse};
 
 use std::time;
 use std::thread;
-use std::sync::mpsc::{Sender, Receiver};
-use std::sync::mpsc;
-use std::sync::Arc;
 
 extern crate core;
-use core::borrow::Borrow;
 
 extern crate rustc_serialize;
 
@@ -42,25 +38,23 @@ mod chromedriver;
 use chromedriver::WebdriverRequestExtensions;
 
 use core::ops::Deref;
-extern crate r2d2;
+extern crate rand;
 
-fn streams<'a, D>(request: &mut Request<D>,
-                  res: &mut Response<'a, D>,
-                  session: &chromedriver::WebdriverSession)
-                  -> MiddlewareResult<'a, D> {
+fn streams<'a, D>(request: &mut Request<D>, mut res: Response<'a, D>) -> MiddlewareResult<'a, D> {
+    let session = request.webdriver().deref().make_session();
     let mut buffer = String::new();
     request.origin.read_to_string(&mut buffer).unwrap();
     let mut parse = form_urlencoded::parse(buffer.as_bytes());
     let mut url = match parse.find(|k| k.0 == "url") {
         Some((_, value)) => value.into_owned(),
-        None => return res.error(StatusCode::BadRequest, "No URL in request")
+        None => return res.error(StatusCode::BadRequest, "No URL in request"),
 
     };
     let request_url = match url::Url::parse(&url) {
         Ok(value) => value,
         Err(_) => {
             return res.error(StatusCode::BadRequest,
-                                        format!("Request URL was dodgy: '{}'", url))
+                             format!("Request URL was dodgy: '{}'", url))
         }
 
     };
@@ -74,10 +68,9 @@ fn streams<'a, D>(request: &mut Request<D>,
             }
             _ => {
                 return res.error(StatusCode::BadRequest,
-                                            format!("Request URL host ({}) wasn't in known \
-                                                     list: '{}'",
-                                                    host,
-                                                    url))
+                                 format!("Request URL host ({}) wasn't in known list: '{}'",
+                                         host,
+                                         url))
             }
 
         }
@@ -88,16 +81,12 @@ fn streams<'a, D>(request: &mut Request<D>,
     let element: ValueResponse = match session.find_element_by_xpath(xpath) {
         Err(val) => {
             return res.error(StatusCode::BadRequest,
-                                        format!("Error while trying to get element: {:?}", val)
-                                        )
+                             format!("Error while trying to get element: {:?}", val))
         }
         Ok(val) => {
             match val {
                 WebDriverResponse::Generic(obj) => obj,
-                _ => {
-                    return res.error(StatusCode::BadRequest,
-                                                format!("Didn't expect {:?}", val))
-                }
+                _ => return res.error(StatusCode::BadRequest, format!("Didn't expect {:?}", val)),
             }
         }
     };
@@ -134,15 +123,12 @@ fn streams<'a, D>(request: &mut Request<D>,
     res.send(output_buffer)
 }
 
-fn run(pool: r2d2::Pool<chromedriver::Webdriver>, ip: std::net::IpAddr, port: u16) {
+fn run(ip: std::net::IpAddr, port: u16, client: chromedriver::Webdriver) {
     let mut server = Nickel::new();
     // app.set_debug(true);
     // app.set_log_level();
-    server.utilize(router! {
-     post "/streams" => |request, mut response| {
-         let wd = pool.get().unwrap();
-        streams(request, &mut response, wd.deref());
-        }});
+    server.utilize(chromedriver::WebdriverMiddleware::new(client));
+    server.post("/streams", streams);
     server.listen((ip, port));
 }
 
@@ -150,18 +136,12 @@ fn main() {
     log4rs::init_file("log.toml", Default::default()).unwrap();
     let port = 8000;
     let mut handles = Vec::new();
-    let config = r2d2::Config::builder()
-        .pool_size(1)
-        .build();
-    let manager = chromedriver::Webdriver::new();
-
-    let pool = r2d2::Pool::new(config, manager).unwrap();
     for iface in get_if_addrs::get_if_addrs().unwrap() {
-        let pool = pool.clone();
         handles.push(::std::thread::spawn(move || {
+            let client = chromedriver::Webdriver::new();
             let ip = iface.ip();
             info!("Listening on {}:{} for {}", ip, port, iface.name);
-            run(pool, ip, port);
+            run(ip, port, client);
         }));
     }
 

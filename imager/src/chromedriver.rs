@@ -16,15 +16,30 @@ use std::net::TcpStream;
 use std::time;
 use std::thread;
 
-pub struct Webdriver<'a> {
+use std::sync::{Arc, Mutex, MutexGuard};
+use nickel::{Request, Response, Middleware, Continue, MiddlewareResult};
+use plugin::{Pluggable, Extensible};
+use typemap::Key;
+use std::error::Error as StdError;
+use r2d2;
+use std::fmt::Error as FmtError;
+use std::fmt;
+
+pub struct Webdriver {
     client: hyper::client::Client,
-    host: &'a str,
+    host: String,
     port: u16,
     process: Child,
 }
 
-pub struct WebdriverSession<'a> {
-    webdriver: &'a Webdriver<'a>,
+impl Default for Webdriver {
+    fn default() -> Self {
+        panic!("No good default for webdriver");
+    }
+}
+
+pub struct WebdriverSession {
+    webdriver: Webdriver,
     session_id: String,
 }
 
@@ -50,8 +65,8 @@ fn decode_response(json_str: &str) -> WebDriverResult<Json> {
     };
 }
 
-trait DoesPost<'a> {
-    fn do_post(&'a self, url: String, body: &String) -> WebDriverResult<Json> {
+trait DoesPost {
+    fn do_post(&self, url: String, body: &String) -> WebDriverResult<Json> {
         debug!("Request: {:?}", body);
         let mut res = self.client()
             .post(&url)
@@ -67,11 +82,11 @@ trait DoesPost<'a> {
         return decoded;
     }
 
-    fn client(&'a self) -> &'a hyper::client::Client;
+    fn client(&self) -> &hyper::client::Client;
 }
 
-impl<'a> Webdriver<'a> {
-    pub fn new() -> Webdriver<'a> {
+impl Webdriver {
+    pub fn new() -> Webdriver {
         let chromedriver_path = match env::var("CHROMEDRIVER") {
             Ok(val) => val,
             Err(_) => "./chromedriver".to_string(),
@@ -97,7 +112,7 @@ impl<'a> Webdriver<'a> {
 
         Webdriver {
             client: hyper::client::Client::new(),
-            host: "localhost",
+            host: "localhost".to_string(),
             port: port,
             process: child,
         }
@@ -107,7 +122,7 @@ impl<'a> Webdriver<'a> {
         format!("http://{}:{}/session{}", self.host, self.port, rest)
     }
 
-    pub fn make_session(&self) -> WebdriverSession {
+    pub fn make_session(self) -> WebdriverSession {
         let mut mobile_emulation: json::Object = json::Object::new();
         mobile_emulation.insert("deviceName".to_string(), "Apple iPhone 5".to_json());
         let mut chrome_options: json::Object = json::Object::new();
@@ -131,25 +146,107 @@ impl<'a> Webdriver<'a> {
     }
 }
 
-impl<'a> Drop for Webdriver<'a> {
+impl Drop for Webdriver {
     fn drop(&mut self) {
         self.process.kill().unwrap();
         debug!("Killed chromedriver process");
     }
 }
 
-impl<'a> DoesPost<'a> for Webdriver<'a> {
-    fn client(&'a self) -> &'a hyper::client::Client {
+#[derive(Debug)]
+pub struct WebdriverError {}
+
+impl fmt::Display for WebdriverError {
+    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+        write!(fmt, "{}: {}", self.description(), self.cause().unwrap())
+    }
+}
+
+impl StdError for WebdriverError {
+    fn description(&self) -> &str {
+        "An error"
+    }
+
+    fn cause(&self) -> Option<&StdError> {
+        None
+    }
+}
+
+impl r2d2::ManageConnection for Webdriver {
+    type Connection = WebdriverSession;
+    type Error = WebdriverError;
+    fn connect(&self) -> Result<Self::Connection, Self::Error> {
+        Ok(self.make_session())
+    }
+    fn is_valid(&self, conn: &mut Self::Connection) -> Result<(), Self::Error> {
+        Ok(())
+    }
+    fn has_broken(&self, conn: &mut Self::Connection) -> bool {
+        return false;
+    }
+}
+
+// impl Clone for Webdriver {
+// fn clone(&self) -> Self {
+// Webdriver {
+// client: self.client,
+// port: self.port,
+// host: self.host,
+// process: self.process
+// }
+// }
+// fn clone_from(&mut self, source: &Self)
+// {
+// }
+// }
+
+
+pub struct WebdriverMiddleware {
+    pub mutex: Arc<Mutex<Webdriver>>,
+}
+
+impl WebdriverMiddleware {
+    pub fn new(client: Webdriver) -> Result<WebdriverMiddleware, Box<StdError>> {
+        Ok(WebdriverMiddleware { mutex: Arc::new(Mutex::new(client)) })
+    }
+}
+
+impl<D> Middleware<D> for WebdriverMiddleware {
+    fn invoke<'mw, 'conn>(&self,
+                          req: &mut Request<'mw, 'conn, D>,
+                          res: Response<'mw, D>)
+                          -> MiddlewareResult<'mw, D> {
+        req.extensions_mut().insert::<WebdriverMiddleware>(self.mutex.clone());
+        Ok(Continue(res))
+    }
+}
+
+impl Key for WebdriverMiddleware {
+    type Value = Arc<Mutex<Webdriver>>;
+}
+
+pub trait WebdriverRequestExtensions {
+    fn webdriver(&self) -> MutexGuard<Webdriver>;
+}
+
+impl<'a, 'b, D> WebdriverRequestExtensions for Request<'a, 'b, D> {
+    fn webdriver(&self) -> MutexGuard<Webdriver> {
+        self.extensions().get::<WebdriverMiddleware>().unwrap().lock().unwrap()
+    }
+}
+
+impl DoesPost for Webdriver {
+    fn client(&self) -> &hyper::client::Client {
         &self.client
     }
 }
-impl<'a> DoesPost<'a> for WebdriverSession<'a> {
-    fn client(&'a self) -> &'a hyper::client::Client {
+impl DoesPost for WebdriverSession {
+    fn client(&self) -> &hyper::client::Client {
         &self.webdriver.client()
     }
 }
 
-impl<'a> Drop for WebdriverSession<'a> {
+impl Drop for WebdriverSession {
     fn drop(&mut self) {
         self.client()
             .delete(&self.url(format!("/{}", self.session_id)))
@@ -158,7 +255,7 @@ impl<'a> Drop for WebdriverSession<'a> {
     }
 }
 
-impl<'a> WebdriverSession<'a> {
+impl WebdriverSession {
     fn url(&self, rest: String) -> String {
         self.webdriver.url(&rest)
     }

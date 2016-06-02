@@ -2,9 +2,11 @@
 extern crate log;
 extern crate log4rs;
 
-extern crate pencil;
-use pencil::{Pencil, Request, Response, PencilResult, PenHTTPError};
-use pencil::http_errors::BadRequest;
+#[macro_use]
+extern crate nickel;
+use nickel::{Request, Response, MiddlewareResult, NickelError, Nickel, MediaType};
+use nickel::status::StatusCode;
+use nickel::router::http_router::HttpRouter;
 
 #[macro_use]
 extern crate hyper;
@@ -16,8 +18,15 @@ use url::form_urlencoded;
 
 extern crate webdriver;
 use webdriver::response::{WebDriverResponse, ValueResponse};
+
 use std::time;
 use std::thread;
+use std::sync::mpsc::{Sender, Receiver};
+use std::sync::mpsc;
+use std::sync::Arc;
+
+extern crate core;
+use core::borrow::Borrow;
 
 extern crate rustc_serialize;
 
@@ -26,25 +35,34 @@ use std::io::Cursor;
 
 extern crate get_if_addrs;
 
-mod chromedriver;
+extern crate plugin;
+extern crate typemap;
 
-fn streams(request: &mut Request) -> PencilResult {
+mod chromedriver;
+use chromedriver::WebdriverRequestExtensions;
+
+use core::ops::Deref;
+extern crate r2d2;
+
+fn streams<'a, D>(request: &mut Request<D>,
+                  res: &mut Response<'a, D>,
+                  session: &chromedriver::WebdriverSession)
+                  -> MiddlewareResult<'a, D> {
     let mut buffer = String::new();
-    request.request.read_to_string(&mut buffer).unwrap();
+    request.origin.read_to_string(&mut buffer).unwrap();
     let mut parse = form_urlencoded::parse(buffer.as_bytes());
     let mut url = match parse.find(|k| k.0 == "url") {
         Some((_, value)) => value.into_owned(),
-        None => {
-            warn!("No URL in request");
-            return Err(PenHTTPError(BadRequest));
-        }
+        None => return res.error(StatusCode::BadRequest, "No URL in request")
+
     };
     let request_url = match url::Url::parse(&url) {
         Ok(value) => value,
         Err(_) => {
-            warn!("Request URL was dodgy: '{}'", url);
-            return Err(PenHTTPError(BadRequest));
+            return res.error(StatusCode::BadRequest,
+                                        format!("Request URL was dodgy: '{}'", url))
         }
+
     };
     let host = request_url.host_str().unwrap();
     let xpath = match host {
@@ -55,38 +73,52 @@ fn streams(request: &mut Request) -> PencilResult {
                 "//div[@id='player']"
             }
             _ => {
-                warn!("Request URL host ({}) wasn't in known list: '{}'",
-                      host,
-                      url);
-                return Err(PenHTTPError(BadRequest));
+                return res.error(StatusCode::BadRequest,
+                                            format!("Request URL host ({}) wasn't in known \
+                                                     list: '{}'",
+                                                    host,
+                                                    url))
             }
+
         }
         .to_string();
 
-    let client = chromedriver::Webdriver::new();
-    let session = client.make_session();
     session.goto_url(url);
     thread::sleep(time::Duration::from_secs(5));
     let element: ValueResponse = match session.find_element_by_xpath(xpath) {
         Err(val) => {
-            warn!("Error while trying to get element: {:?}", val);
-            return Err(PenHTTPError(BadRequest));
+            return res.error(StatusCode::BadRequest,
+                                        format!("Error while trying to get element: {:?}", val)
+                                        )
         }
         Ok(val) => {
             match val {
                 WebDriverResponse::Generic(obj) => obj,
                 _ => {
-                    warn!("Didn't expect {:?}", val);
-                    return Err(PenHTTPError(BadRequest));
+                    return res.error(StatusCode::BadRequest,
+                                                format!("Didn't expect {:?}", val))
                 }
             }
         }
     };
-    let element_location =
-        session.get_element_location(&element).unwrap().find("value").expect("value").clone();
-    let element_size =
-        session.get_element_size(&element).unwrap().find("value").expect("value").clone();
-    let screenshot = session.get_screenshot_as_png().unwrap();
+    let element_location = {
+        let loc = session.get_element_location(&element);
+        loc.unwrap()
+            .find("value")
+            .expect("value")
+            .clone()
+    };
+    let element_size = {
+        let size = session.get_element_size(&element);
+        size.unwrap()
+            .find("value")
+            .expect("value")
+            .clone()
+    };
+    let screenshot = {
+        let png = session.get_screenshot_as_png();
+        png.unwrap()
+    };
 
     let cursor = Cursor::new(&screenshot);
     let mut loaded_image = image::load(cursor, image::ImageFormat::PNG).unwrap();
@@ -98,29 +130,38 @@ fn streams(request: &mut Request) -> PencilResult {
 
     let mut output_buffer: Vec<u8> = Vec::new();
     cropped.save(&mut output_buffer, image::ImageFormat::PNG).unwrap();
-    let mut response = Response::from(output_buffer);
-    response.set_content_type("image/png");
-    Ok(response)
+    res.set(MediaType::Png);
+    res.send(output_buffer)
 }
 
-fn make_app() -> Pencil {
-    let mut app = Pencil::new("");
-    app.set_debug(true);
-    app.set_log_level();
-    app.post("/streams", "streams", streams);
-    return app;
+fn run(pool: r2d2::Pool<chromedriver::Webdriver>, ip: std::net::IpAddr, port: u16) {
+    let mut server = Nickel::new();
+    // app.set_debug(true);
+    // app.set_log_level();
+    server.utilize(router! {
+     post "/streams" => |request, mut response| {
+         let wd = pool.get().unwrap();
+        streams(request, &mut response, wd.deref());
+        }});
+    server.listen((ip, port));
 }
 
 fn main() {
     log4rs::init_file("log.toml", Default::default()).unwrap();
     let port = 8000;
     let mut handles = Vec::new();
+    let config = r2d2::Config::builder()
+        .pool_size(1)
+        .build();
+    let manager = chromedriver::Webdriver::new();
+
+    let pool = r2d2::Pool::new(config, manager).unwrap();
     for iface in get_if_addrs::get_if_addrs().unwrap() {
+        let pool = pool.clone();
         handles.push(::std::thread::spawn(move || {
             let ip = iface.ip();
-            let app = make_app();
             info!("Listening on {}:{} for {}", ip, port, iface.name);
-            app.run((ip, port));
+            run(pool, ip, port);
         }));
     }
 

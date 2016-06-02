@@ -1,4 +1,3 @@
 target/
-ENV/
 .git/
 *.png

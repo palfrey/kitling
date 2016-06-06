@@ -151,7 +151,7 @@ fn main() {
         let image = image::load_from_memory_with_format(&buf, ImageFormat::PNG).unwrap();
         let (width, height) = image.dimensions();
         if width == 0 || height == 0 {
-            warn!("Dodgy image dimensions, skipping");
+            warn!("Dodgy image dimensions, skipping (width = {}, height = {})", width, height);
             let now = time::now().to_timespec();
             not_working_stmt.execute(&[&now, &id]).unwrap();
             thread::sleep(check_ms);

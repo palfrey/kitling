@@ -28,6 +28,7 @@ extern crate core;
 extern crate rustc_serialize;
 
 extern crate image;
+use image::GenericImage;
 use std::io::Cursor;
 
 extern crate get_if_addrs;
@@ -112,6 +113,8 @@ fn streams<'a, D>(request: &mut Request<D>, mut res: Response<'a, D>) -> Middlew
 
     let cursor = Cursor::new(&screenshot);
     let mut loaded_image = image::load(cursor, image::ImageFormat::PNG).unwrap();
+    let (width, height) = loaded_image.dimensions();
+    debug!("Loaded image dimensions: {} x {}", width, height);
     let cropped = loaded_image.crop(
 		element_location.find("x").expect("x").as_u64().expect("numeric x") as u32,
 		element_location.find("y").expect("y").as_u64().expect("numeric y") as u32,

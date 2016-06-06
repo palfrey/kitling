@@ -17,6 +17,7 @@ use time::{Timespec, Duration};
 use hyper::Client;
 use hyper::header::ContentType;
 use image::ImageFormat;
+use image::GenericImage;
 use std::io::Read;
 use hyper::status::StatusCode;
 use postgres::stmt::Statement;
@@ -148,6 +149,12 @@ fn main() {
         let mut buf = Vec::new();
         resp.read_to_end(&mut buf).unwrap();
         let image = image::load_from_memory_with_format(&buf, ImageFormat::PNG).unwrap();
+        let (width, height) = image.dimensions();
+        if width == 0 || height == 0 {
+            warn!("Dodgy image dimensions, skipping");
+            thread::sleep(check_ms);
+            continue;
+        }
         let hash = ImageHash::hash(&image, 16, HashType::DoubleGradient);
 
         debug!("Image hash: {}", hash.to_base64());

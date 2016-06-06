@@ -8,7 +8,7 @@ image = "*"
 log = "*"
 log4rs = {version = ">= 0.3.3", features=["toml"]}
 nickel = "*"
-hyper = "*"
+hyper = "0.8.1"
 url = "*"
 webdriver = "*"
 rustc-serialize = "0.3"

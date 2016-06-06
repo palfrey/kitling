@@ -10,6 +10,7 @@ use nickel::router::http_router::HttpRouter;
 
 #[macro_use]
 extern crate hyper;
+use hyper::header::ContentLength;
 
 use std::io::Read;
 
@@ -120,6 +121,7 @@ fn streams<'a, D>(request: &mut Request<D>, mut res: Response<'a, D>) -> Middlew
     let mut output_buffer: Vec<u8> = Vec::new();
     cropped.save(&mut output_buffer, image::ImageFormat::PNG).unwrap();
     res.set(MediaType::Png);
+    res.set(ContentLength(output_buffer.len() as u64));
     res.send(output_buffer)
 }
 

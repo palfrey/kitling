@@ -152,6 +152,8 @@ fn main() {
         let (width, height) = image.dimensions();
         if width == 0 || height == 0 {
             warn!("Dodgy image dimensions, skipping");
+            let now = time::now().to_timespec();
+            not_working_stmt.execute(&[&now, &id]).unwrap();
             thread::sleep(check_ms);
             continue;
         }

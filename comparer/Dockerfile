@@ -11,6 +11,6 @@ ADD Cargo.* /comparer/
 RUN cargo build
 ADD log.toml /comparer/
 ADD config.toml /comparer/
-COPY wait-for-postgres.sh /frontend/wait-for-postgres.sh
+COPY wait-for-postgres.sh /comparer/wait-for-postgres.sh
 ENV PGPASSWORD mysecretpassword
 CMD ./wait-for-postgres.sh postgres && cargo run

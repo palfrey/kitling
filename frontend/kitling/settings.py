@@ -64,7 +64,7 @@ ROOT_URLCONF = 'kitling.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [os.path.join(BASE_DIR, "templates")],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -109,7 +109,3 @@ GENSHI_TEMPLATE_LOADERS = (
      'django_genshi.loaders.app_directories.load_template',
      'django_genshi.loaders.filesystem.load_template',
 )
-
-TEMPLATE_DIRS = [
-	os.path.join(BASE_DIR, "templates")
-]

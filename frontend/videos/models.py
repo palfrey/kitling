@@ -6,6 +6,7 @@ import humanize
 
 class Video(models.Model):
 	url = models.URLField(unique = True)
+	enabled = models.BooleanField(default = True)
 	working = models.BooleanField(default = False)
 	lastRetrieved = models.DateTimeField(default = datetime.min)
 	motion = models.FloatField(default = 0.0)
@@ -13,6 +14,7 @@ class Video(models.Model):
 	hash = models.CharField(max_length = 100, null = True, blank=True, default = None)
 	extra = JSONField(default = {}, blank=True)
 	streamURL = models.CharField(max_length = 2048, null = True, blank = True)
+	notes = models.CharField(max_length = 1024, null = True, blank = True)
 
 	def corrected_motion(self):
 		return self.motion + self.offset

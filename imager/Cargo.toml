@@ -9,6 +9,7 @@ log = "*"
 log4rs = {version = ">= 0.3.3", features=["toml"]}
 nickel = "*"
 hyper = "0.8.1"
+modifier = "0.1.0"
 url = "*"
 webdriver = "*"
 rustc-serialize = "0.3"

@@ -281,6 +281,10 @@ impl WebdriverSession {
         return self.get_for_element(element, "size");
     }
 
+    pub fn get_element_attribute(&self, element: &ValueResponse, name: &str) -> String {
+        return self.get_for_element(element, &format!("attribute/{}", name)).unwrap().find("value").expect("value").as_string().unwrap().to_string();
+    }
+
     pub fn get_screenshot_as_png(&self) -> Result<Vec<u8>, FromBase64Error> {
         let mut res = self.client()
             .get(&self.url(format!("/{}/screenshot", self.session_id)))

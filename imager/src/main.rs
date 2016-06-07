@@ -8,6 +8,9 @@ use nickel::{Request, Response, MiddlewareResult, Nickel, MediaType};
 use nickel::status::StatusCode;
 use nickel::router::http_router::HttpRouter;
 
+extern crate modifier;
+use modifier::Modifier;
+
 #[macro_use]
 extern crate hyper;
 use hyper::header::ContentLength;
@@ -37,10 +40,30 @@ extern crate plugin;
 extern crate typemap;
 
 mod chromedriver;
-use chromedriver::WebdriverRequestExtensions;
+use chromedriver::{WebdriverRequestExtensions, WebdriverSession};
 
 use core::ops::Deref;
 extern crate rand;
+
+header! { (XExtra, "X-Extra") => [String] }
+
+impl<'a, D> Modifier<Response<'a, D>> for XExtra {
+    fn modify(self, res: &mut Response<'a, D>) {
+        res.headers_mut().set(self)
+    }
+}
+
+fn xpath_helper(session: &WebdriverSession, xpath: String) -> Result<ValueResponse, String> {
+    return match session.find_element_by_xpath(xpath) {
+        Err(val) => Err(format!("Error while trying to get element: {:?}", val)),
+        Ok(val) => {
+            match val {
+                WebDriverResponse::Generic(obj) => Ok(obj),
+                _ => Err(format!("Didn't expect {:?}", val)),
+            }
+        }
+    }
+}
 
 fn streams<'a, D>(request: &mut Request<D>, mut res: Response<'a, D>) -> MiddlewareResult<'a, D> {
     let session = request.webdriver().deref().make_session();
@@ -61,10 +84,36 @@ fn streams<'a, D>(request: &mut Request<D>, mut res: Response<'a, D>) -> Middlew
 
     };
     let host = request_url.host_str().unwrap();
+    let extra_fn: fn(WebdriverSession) -> String;
     let xpath = match host {
-            "livestream.com" => "//div[@id='image-container']/img",
-            "www.ustream.tv" => "//video[@id='UViewer']",
+            "livestream.com" => {
+                fn extra(session: WebdriverSession) -> String {
+                    "".to_string()
+                }
+                extra_fn = extra;
+                "//div[@id='image-container']/img"
+            },
+            "www.ustream.tv" => {
+                fn extra(session: WebdriverSession) -> String {
+                    let res = xpath_helper(&session, "//video[@id='UViewer']".to_string());
+                    return match res {
+                        Ok(val) => {
+                            session.get_element_attribute(&val, "src")
+                        }
+                        Err(val) => {
+                            warn!("Error while trying to get Ustream extra data {}", val);
+                            "".to_string()
+                        }
+                    }
+                }
+                extra_fn = extra;
+                "//video[@id='UViewer']"
+            },
             "www.youtube.com" => {
+                fn extra(_: WebdriverSession) -> String {
+                    "".to_string()
+                }
+                extra_fn = extra;
                 url = url + "?autoplay=1";
                 "//div[@id='player']"
             }
@@ -123,6 +172,10 @@ fn streams<'a, D>(request: &mut Request<D>, mut res: Response<'a, D>) -> Middlew
 
     let mut output_buffer: Vec<u8> = Vec::new();
     cropped.save(&mut output_buffer, image::ImageFormat::PNG).unwrap();
+
+    let extra = extra_fn(session);
+    res.set(XExtra(extra));
+
     res.set(MediaType::Png);
     res.set(ContentLength(output_buffer.len() as u64));
     res.send(output_buffer)

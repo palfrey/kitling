@@ -7,8 +7,6 @@ comparer:
   links:
     - postgres
     - imager
-  volumes:
-    - ./comparer/:/comparer/
   environment:
     - DATABASE_URL=postgres://postgres:mysecretpassword@postgres/postgres
 frontend:

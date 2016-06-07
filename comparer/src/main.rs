@@ -72,7 +72,7 @@ fn main() {
                                         "update videos_video set working = true, hash = $1, \
                                          motion = $2, \"lastRetrieved\" = $3, extra = $4, \"streamURL\" = $5 where id = $6");
     let not_working_stmt = prepare_statement(&conn,
-                                     "update videos_video set working = false, \"lastRetrieved\" = $1 where id = $2");
+                                     "update videos_video set working = false, motion = 0, \"lastRetrieved\" = $1 where id = $2");
 
     info!("Connected to Postgres and ready to update video...");
     loop {

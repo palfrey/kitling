@@ -44,6 +44,8 @@ use chromedriver::{WebdriverRequestExtensions, WebdriverSession};
 
 use core::ops::Deref;
 extern crate rand;
+extern crate regex;
+#[macro_use] extern crate lazy_static;
 
 header! { (XExtra, "X-Extra") => [String] }
 
@@ -88,7 +90,12 @@ fn streams<'a, D>(request: &mut Request<D>, mut res: Response<'a, D>) -> Middlew
     let xpath = match host {
             "livestream.com" => {
                 fn extra(session: WebdriverSession) -> String {
-                    "".to_string()
+                    lazy_static! {
+                        static ref RE: regex::Regex = regex::Regex::new(r"app-argument=http://livestream.com/accounts/(\d+)/events/(\d+)").unwrap();
+                    }
+                    let source = session.get_page_source();
+                    let caps = RE.captures(&source).unwrap();
+                    format!("[\"{}\",\"{}\"]", &caps[1], &caps[2])
                 }
                 extra_fn = extra;
                 "//div[@id='image-container']/img"

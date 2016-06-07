@@ -240,6 +240,17 @@ impl WebdriverSession {
             .unwrap();
     }
 
+    pub fn get_page_source(&self) -> String {
+        let mut res = self.client()
+            .get(&self.url(format!("/{}/source", self.session_id)))
+            .send()
+            .unwrap();
+        let mut buffer = String::new();
+        res.read_to_string(&mut buffer).unwrap();
+        let decoded = decode_response(&buffer);
+        return decoded.unwrap().find("value").expect("value").as_string().unwrap().to_string();
+    }
+
     pub fn find_element_by_xpath(&self, xpath: String) -> WebDriverResult<WebDriverResponse> {
         let params = LocatorParameters {
             value: xpath.clone(),

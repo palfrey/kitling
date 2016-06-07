@@ -109,3 +109,5 @@ GENSHI_TEMPLATE_LOADERS = (
      'django_genshi.loaders.app_directories.load_template',
      'django_genshi.loaders.filesystem.load_template',
 )
+
+TEMPLATE_DIRS = (os.path.join(BASE_DIR, "templates"),)

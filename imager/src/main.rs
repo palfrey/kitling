@@ -105,7 +105,7 @@ fn streams<'a, D>(request: &mut Request<D>, mut res: Response<'a, D>) -> Middlew
                     let res = xpath_helper(&session, "//video[@id='UViewer']".to_string());
                     return match res {
                         Ok(val) => {
-                            session.get_element_attribute(&val, "src")
+                            format!("\"{}\"", session.get_element_attribute(&val, "src"))
                         }
                         Err(val) => {
                             warn!("Error while trying to get Ustream extra data {}", val);

@@ -1,5 +1,5 @@
 from django.contrib import admin
-from models import *
+from .models import *
 
 class VideoAdmin(admin.ModelAdmin):
     list_display = ('url','working', 'last_retrieved', 'corrected_motion')

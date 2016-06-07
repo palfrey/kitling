@@ -1,8 +1,8 @@
 from django.contrib.auth.models import User, Group
 from rest_framework import viewsets, permissions
-from serialisers import *
-from models import *
-import urlparse
+from .serialisers import *
+from .models import *
+from urllib.parse import urlparse
 from django.http import HttpResponseBadRequest
 from django.db.models import F
 
@@ -55,7 +55,7 @@ def all_feeds(request):
 def feed_core(video):
 	if video == None:
 		return HttpResponseBadRequest("No usable videos")
-	res = urlparse.urlparse(video.url)
+	res = urlparse(video.url)
 	loc = res.netloc
 	if loc == "":
 		return HttpResponseBadRequest("Can't determine host")

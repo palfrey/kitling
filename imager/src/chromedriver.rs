@@ -144,7 +144,9 @@ impl Webdriver {
         mobile_emulation.insert("deviceName".to_string(), "Apple iPhone 5".to_json());
         let mut chrome_options: json::Object = json::Object::new();
         chrome_options.insert("mobileEmulation".to_string(), mobile_emulation.to_json());
-        chrome_options.insert("args".to_string(), ["--start-maximized".to_string(), "--no-sandbox".to_string()].to_json());
+        chrome_options.insert("args".to_string(),
+                              ["--start-maximized".to_string(), "--no-sandbox".to_string()]
+                                  .to_json());
         let mut desired: json::Object = json::Object::new();
         desired.insert("chromeOptions".to_string(), chrome_options.to_json());
         let mut request: json::Object = json::Object::new();
@@ -293,7 +295,13 @@ impl WebdriverSession {
     }
 
     pub fn get_element_attribute(&self, element: &ValueResponse, name: &str) -> String {
-        return self.get_for_element(element, &format!("attribute/{}", name)).unwrap().find("value").expect("value").as_string().unwrap().to_string();
+        return self.get_for_element(element, &format!("attribute/{}", name))
+            .unwrap()
+            .find("value")
+            .expect("value")
+            .as_string()
+            .unwrap()
+            .to_string();
     }
 
     pub fn get_screenshot_as_png(&self) -> Result<Vec<u8>, FromBase64Error> {

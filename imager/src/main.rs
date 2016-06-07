@@ -45,7 +45,8 @@ use chromedriver::{WebdriverRequestExtensions, WebdriverSession};
 use core::ops::Deref;
 extern crate rand;
 extern crate regex;
-#[macro_use] extern crate lazy_static;
+#[macro_use]
+extern crate lazy_static;
 
 header! { (XExtra, "X-Extra") => [String] }
 
@@ -64,7 +65,7 @@ fn xpath_helper(session: &WebdriverSession, xpath: String) -> Result<ValueRespon
                 _ => Err(format!("Didn't expect {:?}", val)),
             }
         }
-    }
+    };
 }
 
 fn streams<'a, D>(request: &mut Request<D>, mut res: Response<'a, D>) -> MiddlewareResult<'a, D> {
@@ -91,7 +92,10 @@ fn streams<'a, D>(request: &mut Request<D>, mut res: Response<'a, D>) -> Middlew
             "livestream.com" => {
                 fn extra(session: WebdriverSession) -> String {
                     lazy_static! {
-                        static ref RE: regex::Regex = regex::Regex::new(r"app-argument=http://livestream.com/accounts/(\d+)/events/(\d+)").unwrap();
+                        static ref RE: regex::Regex =
+                            regex::Regex::new(
+                                r"app-argument=http://livestream.com/accounts/(\d+)/events/(\d+)")
+                        .unwrap();
                     }
                     let source = session.get_page_source();
                     let caps = RE.captures(&source).unwrap();
@@ -99,23 +103,21 @@ fn streams<'a, D>(request: &mut Request<D>, mut res: Response<'a, D>) -> Middlew
                 }
                 extra_fn = extra;
                 "//div[@id='image-container']/img"
-            },
+            }
             "www.ustream.tv" => {
                 fn extra(session: WebdriverSession) -> String {
                     let res = xpath_helper(&session, "//video[@id='UViewer']".to_string());
                     return match res {
-                        Ok(val) => {
-                            format!("\"{}\"", session.get_element_attribute(&val, "src"))
-                        }
+                        Ok(val) => format!("\"{}\"", session.get_element_attribute(&val, "src")),
                         Err(val) => {
                             warn!("Error while trying to get Ustream extra data {}", val);
                             "".to_string()
                         }
-                    }
+                    };
                 }
                 extra_fn = extra;
                 "//video[@id='UViewer']"
-            },
+            }
             "www.youtube.com" => {
                 fn extra(_: WebdriverSession) -> String {
                     "".to_string()
@@ -190,8 +192,6 @@ fn streams<'a, D>(request: &mut Request<D>, mut res: Response<'a, D>) -> Middlew
 
 fn run(ip: std::net::IpAddr, port: u16, client: chromedriver::Webdriver) {
     let mut server = Nickel::new();
-    // app.set_debug(true);
-    // app.set_log_level();
     server.utilize(chromedriver::WebdriverMiddleware::new(client));
     server.post("/streams", streams);
     server.listen((ip, port));

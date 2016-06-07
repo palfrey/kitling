@@ -1,5 +1,4 @@
 FROM jimmycuadra/rust:1.9.0
-#RUN echo "deb http://archive.ubuntu.com/ubuntu vivid multiverse\n" >> /etc/apt/sources.list
 ENV DEBIAN_FRONTEND noninteractive
 RUN apt-get update
 
@@ -20,7 +19,7 @@ RUN wget http://chromedriver.storage.googleapis.com/2.21/chromedriver_linux64.zi
 RUN unzip chromedriver_linux64.zip -d /imager
 ADD chromedriver-xvfb.sh /imager
 
-ENV RUST_BACKTRACE=1
+ENV RUST_BACKTRACE 1
 ENV CHROMEDRIVER ./chromedriver-xvfb.sh
 EXPOSE 8000
 ADD src/ /imager/src

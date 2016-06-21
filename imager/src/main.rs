@@ -69,7 +69,6 @@ fn xpath_helper(session: &WebdriverSession, xpath: String) -> Result<ValueRespon
 }
 
 fn streams<'a, D>(request: &mut Request<D>, mut res: Response<'a, D>) -> MiddlewareResult<'a, D> {
-    let session = request.webdriver().deref().make_session();
     let mut buffer = String::new();
     request.origin.read_to_string(&mut buffer).unwrap();
     let mut parse = form_urlencoded::parse(buffer.as_bytes());
@@ -87,6 +86,7 @@ fn streams<'a, D>(request: &mut Request<D>, mut res: Response<'a, D>) -> Middlew
 
     };
     let host = request_url.host_str().unwrap();
+    let mut device_name: &str = "Laptop with HiDPI screen";
     let extra_fn: fn(WebdriverSession) -> String;
     let xpath = match host {
             "livestream.com" => {
@@ -102,6 +102,7 @@ fn streams<'a, D>(request: &mut Request<D>, mut res: Response<'a, D>) -> Middlew
                     format!("[\"{}\",\"{}\"]", &caps[1], &caps[2])
                 }
                 extra_fn = extra;
+                device_name = "Apple iPhone 5";
                 "//div[@id='image-container']/img"
             }
             "www.ustream.tv" => {
@@ -116,6 +117,7 @@ fn streams<'a, D>(request: &mut Request<D>, mut res: Response<'a, D>) -> Middlew
                     };
                 }
                 extra_fn = extra;
+                device_name = "Apple iPhone 5";
                 "//video[@id='UViewer']"
             }
             "www.youtube.com" => {
@@ -135,7 +137,7 @@ fn streams<'a, D>(request: &mut Request<D>, mut res: Response<'a, D>) -> Middlew
 
         }
         .to_string();
-
+    let session = request.webdriver().deref().make_session(device_name);
     session.goto_url(url);
     thread::sleep(time::Duration::from_secs(5));
     let element: ValueResponse = match session.find_element_by_xpath(xpath) {

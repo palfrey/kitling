@@ -139,9 +139,9 @@ impl Webdriver {
         format!("http://{}:{}/session{}", self.host, self.port, rest)
     }
 
-    pub fn make_session(&self) -> WebdriverSession {
+    pub fn make_session(&self, device_name: &str) -> WebdriverSession {
         let mut mobile_emulation: json::Object = json::Object::new();
-        mobile_emulation.insert("deviceName".to_string(), "Apple iPhone 5".to_json());
+        mobile_emulation.insert("deviceName".to_string(), device_name.to_json());
         let mut chrome_options: json::Object = json::Object::new();
         chrome_options.insert("mobileEmulation".to_string(), mobile_emulation.to_json());
         chrome_options.insert("args".to_string(),

@@ -57,7 +57,7 @@ impl<'a, D> Modifier<Response<'a, D>> for XExtra {
 }
 
 fn xpath_helper(session: &WebdriverSession, xpath: String) -> Result<ValueResponse, String> {
-    return match session.find_element_by_xpath(xpath) {
+    match session.find_element_by_xpath(xpath) {
         Err(val) => Err(format!("Error while trying to get element: {:?}", val)),
         Ok(val) => {
             match val {
@@ -65,7 +65,7 @@ fn xpath_helper(session: &WebdriverSession, xpath: String) -> Result<ValueRespon
                 _ => Err(format!("Didn't expect {:?}", val)),
             }
         }
-    };
+    }
 }
 
 fn streams<'a, D>(request: &mut Request<D>, mut res: Response<'a, D>) -> MiddlewareResult<'a, D> {
@@ -108,13 +108,13 @@ fn streams<'a, D>(request: &mut Request<D>, mut res: Response<'a, D>) -> Middlew
             "www.ustream.tv" => {
                 fn extra(session: WebdriverSession) -> String {
                     let res = xpath_helper(&session, "//video[@id='UViewer']".to_string());
-                    return match res {
+                    match res {
                         Ok(val) => format!("\"{}\"", session.get_element_attribute(&val, "src")),
                         Err(val) => {
                             warn!("Error while trying to get Ustream extra data {}", val);
                             "".to_string()
                         }
-                    };
+                    }
                 }
                 extra_fn = extra;
                 device_name = "Apple iPhone 5";

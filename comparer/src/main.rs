@@ -41,13 +41,28 @@ fn prepare_statement<'a>(conn: &'a Connection, stmt: &str) -> Statement<'a> {
     }
 }
 
-fn main() {
+fn get_motion(old_hash: postgres::Result<String>, new_hash: &img_hash::ImageHash) -> f64 {
+    match old_hash {
+        Ok(val) => {
+            match ImageHash::from_base64(&val) {
+                Ok(val) => val.dist_ratio(new_hash) as f64,
+                Err(_) => -1 as f64
+            }
+        },
+        Err(_) => -1 as f64
+    }
+}
+
+fn get_config() -> toml::Value {
     let mut config_string = String::new();
     File::open("config.toml").unwrap().read_to_string(&mut config_string).unwrap();
     let mut parser = toml::Parser::new(&config_string);
 
-    let config = parser.parse().unwrap();
-    let config_table = config.get("config").unwrap();
+    parser.parse().unwrap().get("config").unwrap().clone()
+}
+
+fn main() {
+    let config_table = get_config();
     let interval = Duration::minutes(config_table.lookup("refresh_minutes")
                                                  .unwrap()
                                                  .as_integer()
@@ -128,23 +143,16 @@ fn main() {
 
         let mut resp = raw_resp.unwrap();
 
+        let now = time::now().to_timespec();
         if resp.status != StatusCode::Ok {
             warn!("{:?}", resp.status_raw());
-            let now = time::now().to_timespec();
             not_working_stmt.execute(&[&now, &id]).unwrap();
             thread::sleep(check_ms);
             continue;
         }
 
-        let extra: String = match resp.headers.get::<XExtra>() {
-            Some(val) => val.to_string(),
-            None => "{}".to_string()
-        };
-
-        let stream: String = match resp.headers.get::<XStream>() {
-            Some(val) => val.to_string(),
-            None => "".to_string()
-        };
+        let extra: String = resp.headers.get::<XExtra>().map_or("{}".to_string(), |v| v.to_string());
+        let stream: String = resp.headers.get::<XStream>().map_or("".to_string(), |v| v.to_string());
 
         let mut buf = Vec::new();
         resp.read_to_end(&mut buf).unwrap();
@@ -152,7 +160,6 @@ fn main() {
         let (width, height) = image.dimensions();
         if width == 0 || height == 0 {
             warn!("Dodgy image dimensions, skipping (width = {}, height = {})", width, height);
-            let now = time::now().to_timespec();
             not_working_stmt.execute(&[&now, &id]).unwrap();
             thread::sleep(check_ms);
             continue;
@@ -160,17 +167,8 @@ fn main() {
         let hash = ImageHash::hash(&image, 16, HashType::DoubleGradient);
 
         debug!("Image hash: {}", hash.to_base64());
-        let motion: f64 = match old_hash {
-            Ok(val) => {
-                match ImageHash::from_base64(&val) {
-                    Ok(val) => val.dist_ratio(&hash) as f64,
-                    Err(_) => -1 as f64
-                }
-            },
-            Err(_) => -1 as f64
-        };
+        let motion = get_motion(old_hash, &hash);
         debug!("Difference {}", motion);
-        let now = time::now().to_timespec();
         match update_stmt.execute(&[&hash.to_base64(), &motion, &now, &extra, &stream, &id]) {
             Ok(_) => info!("Updated {} with motion {}", url, motion),
             Err(err) => warn!("Error executing update: {:?}", err),

@@ -18,7 +18,7 @@ use std::thread;
 
 use std::sync::{Arc, Mutex, MutexGuard};
 use nickel::{Request, Response, Middleware, Continue, MiddlewareResult};
-use plugin::{Pluggable, Extensible};
+use plugin::Extensible;
 use typemap::Key;
 
 use rand;
@@ -44,11 +44,11 @@ pub struct WebdriverSession {
 }
 
 fn decode_response(json_str: &str) -> WebDriverResult<Json> {
-    let decoded = Json::from_str(&json_str).unwrap();
+    let decoded = Json::from_str(json_str).unwrap();
     let status =
         decoded.find("status").expect("status code").as_u64().expect("numeric status code");
     let value = decoded.find("value").expect("value");
-    return match status {
+    match status {
         0 => Ok(decoded.clone()),
         _ => {
             let message = value.find("message")
@@ -60,13 +60,13 @@ fn decode_response(json_str: &str) -> WebDriverResult<Json> {
                 7 => ErrorStatus::NoSuchElement,
                 _ => ErrorStatus::UnknownError,
             };
-            return Err(WebDriverError::new(kind, message));
+            Err(WebDriverError::new(kind, message))
         }
-    };
+    }
 }
 
 trait DoesPost {
-    fn do_post(&self, url: String, body: &String) -> WebDriverResult<Json> {
+    fn do_post(&self, url: String, body: &str) -> WebDriverResult<Json> {
         debug!("Request: {:?}", body);
         let mut res = self.client()
             .post(&url)
@@ -79,7 +79,7 @@ trait DoesPost {
         // assert_eq!(res.status, hyper::Ok);
         let decoded = decode_response(&buffer);
         debug!("Decoded: {:?}", decoded);
-        return decoded;
+        decoded
     }
 
     fn client(&self) -> &hyper::client::Client;
@@ -250,7 +250,7 @@ impl WebdriverSession {
         let mut buffer = String::new();
         res.read_to_string(&mut buffer).unwrap();
         let decoded = decode_response(&buffer);
-        return decoded.unwrap().find("value").expect("value").as_string().unwrap().to_string();
+        decoded.unwrap().find("value").expect("value").as_string().unwrap().to_string()
     }
 
     pub fn find_element_by_xpath(&self, xpath: String) -> WebDriverResult<WebDriverResponse> {
@@ -260,14 +260,14 @@ impl WebdriverSession {
         };
         let decoded = self.do_post(self.url(format!("/{}/element", self.session_id)),
                                    &params.to_json().to_string());
-        return match decoded {
+        match decoded {
             Err(val) => Err(val),
             Ok(val) => {
                 Ok(WebDriverResponse::Generic(ValueResponse::new(val.find("value")
                     .expect("has value")
                     .clone())))
             }
-        };
+        }
     }
 
     fn get_for_element(&self, element: &ValueResponse, kind: &str) -> WebDriverResult<Json> {
@@ -283,25 +283,25 @@ impl WebdriverSession {
         // assert_eq!(res.status, hyper::Ok);
         let decoded = decode_response(&buffer);
         debug!("Decoded: {:?}", decoded);
-        return decoded;
+        decoded
     }
 
     pub fn get_element_location(&self, element: &ValueResponse) -> WebDriverResult<Json> {
-        return self.get_for_element(element, "location");
+        self.get_for_element(element, "location")
     }
 
     pub fn get_element_size(&self, element: &ValueResponse) -> WebDriverResult<Json> {
-        return self.get_for_element(element, "size");
+        self.get_for_element(element, "size")
     }
 
     pub fn get_element_attribute(&self, element: &ValueResponse, name: &str) -> String {
-        return self.get_for_element(element, &format!("attribute/{}", name))
+        self.get_for_element(element, &format!("attribute/{}", name))
             .unwrap()
             .find("value")
             .expect("value")
             .as_string()
             .unwrap()
-            .to_string();
+            .to_string()
     }
 
     pub fn get_screenshot_as_png(&self) -> Result<Vec<u8>, FromBase64Error> {
@@ -313,6 +313,6 @@ impl WebdriverSession {
         res.read_to_string(&mut buffer).unwrap();
         let decoded = decode_response(&buffer).expect("decoded");
         let value = decoded.find("value").expect("value").as_string().expect("string value");
-        return value.clone().from_base64();
+        value.from_base64()
     }
 }

@@ -176,10 +176,10 @@ fn streams<'a, D>(request: &mut Request<D>, mut res: Response<'a, D>) -> Middlew
     let (width, height) = loaded_image.dimensions();
     debug!("Loaded image dimensions: {} x {}", width, height);
     let cropped = loaded_image.crop(
-		element_location.find("x").expect("x").as_u64().expect("numeric x") as u32,
-		element_location.find("y").expect("y").as_u64().expect("numeric y") as u32,
-		element_size.find("width").expect("width").as_u64().expect("numeric width") as u32,
-		element_size.find("height").expect("height").as_u64().expect("numeric height") as u32);
+		element_location.find("x").expect("x").as_f64().expect("numeric x") as u32,
+		element_location.find("y").expect("y").as_f64().expect("numeric y") as u32,
+		element_size.find("width").expect("width").as_f64().expect("numeric width") as u32,
+		element_size.find("height").expect("height").as_f64().expect("numeric height") as u32);
 
     let mut output_buffer: Vec<u8> = Vec::new();
     cropped.save(&mut output_buffer, image::ImageFormat::PNG).unwrap();

@@ -103,7 +103,7 @@ fn streams<'a, D>(request: &mut Request<D>, mut res: Response<'a, D>) -> Middlew
                 }
                 extra_fn = extra;
                 device_name = "Apple iPhone 5";
-                "//div[@id='image-container']/img"
+                "//img[@class='thumbnail_image']"
             }
             "www.ustream.tv" => {
                 fn extra(session: WebdriverSession) -> String {

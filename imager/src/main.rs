@@ -124,6 +124,37 @@ fn streams<'a, D>(request: &mut Request<D>, mut res: Response<'a, D>) -> Middlew
                 fn extra(_: WebdriverSession) -> String {
                     "".to_string()
                 }
+                lazy_static! {
+                    static ref RE: regex::Regex =
+                        regex::Regex::new(
+                            r"https://www.youtube.com/embed/([A-Za-z0-9_]+)")
+                    .unwrap();
+                }
+                let id = match RE.captures(&url) {
+                    Some(val) => String::from(&val[1]),
+                    None => {
+                        return res.error(StatusCode::BadRequest,
+                                         format!("Bad Youtube URL: '{}'", url))
+                    }
+                };
+
+                let mut status_res = hyper::client::Client::new()
+                    .get(&format!("https://www.youtube.com/get_video_info?video_id={}", id))
+                    .send()
+                    .unwrap();
+                let mut buffer = String::new();
+                status_res.read_to_string(&mut buffer).unwrap();
+                lazy_static! {
+                    static ref STATUS_RE: regex::Regex =
+                        regex::Regex::new(
+                            r"&status=([^&]+)&")
+                    .unwrap();
+                }
+                let status_caps = STATUS_RE.captures(&buffer).unwrap();
+                if &status_caps[1] == "fail" {
+                    return res.error(StatusCode::BadRequest,
+                                     format!("Youtube feed not running: '{}'", url));
+                }
                 extra_fn = extra;
                 url = url + "?autoplay=1";
                 "//div[@id='player']"

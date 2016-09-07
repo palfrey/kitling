@@ -127,7 +127,7 @@ fn streams<'a, D>(request: &mut Request<D>, mut res: Response<'a, D>) -> Middlew
                 lazy_static! {
                     static ref RE: regex::Regex =
                         regex::Regex::new(
-                            r"https://www.youtube.com/embed/([A-Za-z0-9_]+)")
+                            r"https://www.youtube.com/embed/([A-Za-z0-9_-]+)")
                     .unwrap();
                 }
                 let id = match RE.captures(&url) {

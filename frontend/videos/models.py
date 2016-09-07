@@ -22,6 +22,8 @@ class Video(models.Model):
 	corrected_motion.admin_order_field = 'motion'
 
 	def last_retrieved(self):
+		if self.lastRetrieved == None:
+			return "Never"
 		return humanize.naturaltime(datetime.now(self.lastRetrieved.tzinfo) - self.lastRetrieved)
 
 	last_retrieved.admin_order_field = 'lastRetrieved'

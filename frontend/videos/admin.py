@@ -10,3 +10,5 @@ class FeedAdmin(admin.ModelAdmin):
 	list_display = ('name', 'owner')
 
 admin.site.register(Feed, FeedAdmin)
+
+admin.site.register(Channel)

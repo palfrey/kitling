@@ -15,6 +15,7 @@ class Video(models.Model):
 	extra = JSONField(default = {}, blank=True)
 	streamURL = models.CharField(max_length = 2048, null = True, blank = True)
 	notes = models.CharField(max_length = 1024, null = True, blank = True)
+	channel = models.ForeignKey('Channel', null = True, blank = True, default = None)
 
 	def corrected_motion(self):
 		return self.motion + self.offset
@@ -40,3 +41,20 @@ class Feed(models.Model):
 
 	class Meta:
 		unique_together = ("name", "owner")
+
+class Channel(models.Model):
+	url = models.URLField(unique = True)
+	enabled = models.BooleanField(default = True)
+	working = models.BooleanField(default = False)
+	lastRetrieved = models.DateTimeField(default = datetime.min)
+	notes = models.CharField(max_length = 1024, null = True, blank = True)
+
+	def last_retrieved(self):
+		if self.lastRetrieved == None:
+			return "Never"
+		return humanize.naturaltime(datetime.now(self.lastRetrieved.tzinfo) - self.lastRetrieved)
+
+	last_retrieved.admin_order_field = 'lastRetrieved'
+
+	def __unicode__(self):
+		return self.url

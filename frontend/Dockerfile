@@ -8,6 +8,7 @@ RUN apt-get update && apt-get install -fy --force-yes --no-install-recommends \
 	postgresql-client-common \
 	postgresql-client-9.4 \
 	build-essential \
+	cron \
 	&& apt-get clean \
 	&& rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 COPY requirements.txt requirements.txt

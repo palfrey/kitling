@@ -22,4 +22,4 @@ COPY refreeze.sh /frontend/refreeze.sh
 COPY wait-for-postgres.sh /frontend/wait-for-postgres.sh
 EXPOSE 8000
 ENV PGPASSWORD mysecretpassword
-CMD ./wait-for-postgres.sh postgres && python manage.py migrate && python manage.py runserver 0.0.0.0:8000
+CMD ./wait-for-postgres.sh postgres && python manage.py migrate && python manage.py crontab add && python manage.py runserver 0.0.0.0:8000

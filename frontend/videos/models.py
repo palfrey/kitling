@@ -23,7 +23,7 @@ class Video(models.Model):
 	corrected_motion.admin_order_field = 'motion'
 
 	def last_retrieved(self):
-		if self.lastRetrieved == None:
+		if self.lastRetrieved == datetime.min:
 			return "Never"
 		return humanize.naturaltime(datetime.now(self.lastRetrieved.tzinfo) - self.lastRetrieved)
 
@@ -50,7 +50,7 @@ class Channel(models.Model):
 	notes = models.CharField(max_length = 1024, null = True, blank = True)
 
 	def last_retrieved(self):
-		if self.lastRetrieved == None:
+		if self.lastRetrieved == datetime.min:
 			return "Never"
 		return humanize.naturaltime(datetime.now(self.lastRetrieved.tzinfo) - self.lastRetrieved)
 

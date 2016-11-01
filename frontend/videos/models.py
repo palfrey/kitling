@@ -1,14 +1,17 @@
 from django.db import models
 from django.contrib.auth.models import User
+from django.utils import timezone
 from datetime import datetime
 from jsonfield import JSONField
 import humanize
+
+min_date = timezone.make_aware(datetime.min)
 
 class Video(models.Model):
 	url = models.URLField(unique = True)
 	enabled = models.BooleanField(default = True)
 	working = models.BooleanField(default = False)
-	lastRetrieved = models.DateTimeField(default = datetime.min)
+	lastRetrieved = models.DateTimeField(default = min_date)
 	motion = models.FloatField(default = 0.0)
 	offset = models.FloatField(default = 0.0)
 	hash = models.CharField(max_length = 100, null = True, blank=True, default = None)
@@ -23,9 +26,9 @@ class Video(models.Model):
 	corrected_motion.admin_order_field = 'motion'
 
 	def last_retrieved(self):
-		if self.lastRetrieved == datetime.min:
+		if self.lastRetrieved == min_date:
 			return "Never"
-		return humanize.naturaltime(datetime.now(self.lastRetrieved.tzinfo) - self.lastRetrieved)
+		return humanize.naturaltime(timezone.now() - self.lastRetrieved)
 
 	last_retrieved.admin_order_field = 'lastRetrieved'
 
@@ -46,13 +49,13 @@ class Channel(models.Model):
 	url = models.URLField(unique = True)
 	enabled = models.BooleanField(default = True)
 	working = models.BooleanField(default = False)
-	lastRetrieved = models.DateTimeField(default = datetime.min)
+	lastRetrieved = models.DateTimeField(default = min_date)
 	notes = models.CharField(max_length = 1024, null = True, blank = True)
 
 	def last_retrieved(self):
-		if self.lastRetrieved == datetime.min:
+		if self.lastRetrieved == min_date:
 			return "Never"
-		return humanize.naturaltime(datetime.now(self.lastRetrieved.tzinfo) - self.lastRetrieved)
+		return humanize.naturaltime(timezone.now() - self.lastRetrieved)
 
 	last_retrieved.admin_order_field = 'lastRetrieved'
 

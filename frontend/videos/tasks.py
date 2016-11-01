@@ -1,7 +1,7 @@
 from models import Channel, Video
 import re
 import requests
-from datetime import datetime
+from django.utils import timezone
 
 import logging
 logging.basicConfig()
@@ -12,7 +12,7 @@ def update_channels():
     for channel in Channel.objects.all():
         try:
             print channel
-            channel.lastRetrieved = datetime.now()
+            channel.lastRetrieved = timezone.now()
             videos = Video.objects.filter(channel=channel)
             existing_videos = []
             res = livestream.search(channel.url)

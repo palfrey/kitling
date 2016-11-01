@@ -3,7 +3,7 @@ from __future__ import unicode_literals
 
 from django.db import migrations, models
 import datetime
-
+from django.utils import timezone
 
 class Migration(migrations.Migration):
 
@@ -15,6 +15,6 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='video',
             name='lastRetrieved',
-            field=models.DateTimeField(default=datetime.datetime(1, 1, 1, 0, 0)),
+            field=models.DateTimeField(default=timezone.make_aware(datetime.datetime.min)),
         ),
     ]

@@ -94,7 +94,7 @@ fn streams<'a, D>(request: &mut Request<D>, mut res: Response<'a, D>) -> Middlew
                     lazy_static! {
                         static ref RE: regex::Regex =
                             regex::Regex::new(
-                                r"app-argument=http://livestream.com/accounts/(\d+)/events/(\d+)")
+                                r"app-argument=https?://livestream.com/accounts/(\d+)/events/(\d+)")
                         .unwrap();
                     }
                     let source = session.get_page_source();

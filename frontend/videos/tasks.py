@@ -29,7 +29,7 @@ def update_channels():
             videos = Video.objects.filter(channel=channel)
             existing_videos = []
             (kind, res) = get_channel_type(channel.url)
-            video_urls = []
+            video_urls = {}
             if kind == "livestream":
                 url = "http://api.new.livestream.com/accounts/%s/events?newer=9" % res.groups(1)
                 data = requests.get(url).json()
@@ -51,7 +51,7 @@ def update_channels():
                 data = data.json()
                 for item in data["items"]:
                     video_url = "https://www.youtube.com/embed/%s" % (item["id"]["videoId"])
-                    video_urls.append(video_url)
+                    video_urls[video_url] = {"name": item["snippet"]["title"]}
             else:
                 print "Don't know %s channel" % channel.url
                 channel.working = False
@@ -59,11 +59,15 @@ def update_channels():
                 continue
             for video_url in video_urls:
                 print "video_url", video_url
+                info = video_urls[video_url]
                 filtered = videos.filter(url=video_url)
                 if filtered.exists():
-                    existing_videos.append(filtered.first().id)
+                    video = filtered.first()
+                    video.name = info["name"]
+                    video.save()
+                    existing_videos.append(video.id)
                 else:
-                    existing_videos.append(Video.objects.create(url=video_url, channel=channel).id)
+                    existing_videos.append(Video.objects.create(url=video_url, channel=channel, name=info["name"]).id)
             missing = videos.exclude(id__in = Video.objects.filter(id__in=existing_videos).values_list('id', flat=True))
             for m in missing:
                 m.delete()

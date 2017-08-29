@@ -31,6 +31,10 @@ def update_channels():
             (kind, res) = get_channel_type(channel.url)
             video_urls = {}
             if kind == "livestream":
+                info = requests.get(channel.url)
+                info.raise_for_status()
+                info = info.json()
+                channel.name = info["full_name"]
                 url = "http://api.new.livestream.com/accounts/%s/events?newer=9" % res.groups(1)
                 data = requests.get(url).json()
                 for item in data["data"]:

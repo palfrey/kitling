@@ -47,6 +47,7 @@ class Feed(models.Model):
 
 class Channel(models.Model):
 	url = models.URLField(unique = True)
+	name = models.CharField(max_length=255, default="")
 	enabled = models.BooleanField(default = True)
 	working = models.BooleanField(default = False)
 	lastRetrieved = models.DateTimeField(default = min_date)

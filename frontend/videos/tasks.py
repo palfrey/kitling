@@ -40,9 +40,15 @@ def update_channels():
                 api_key = environ.get("YOUTUBE_API_KEY", None)
                 if api_key == None:
                     raise Exception, "No YOUTUBE_API_KEY"
-                url = "https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=%s&eventType=live&type=video&key=%s"%(res.group(1), api_key)
-                print url
-                data = requests.get(url).json()
+                id = res.group(1)
+                info = requests.get("https://www.googleapis.com/youtube/v3/channels?id=%s&part=snippet&key=%s"%(id, api_key))
+                info.raise_for_status()
+                channel.name = info.json()["items"][0]["snippet"]["title"]
+                print channel.name
+                url = "https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=%s&eventType=live&type=video&key=%s"%(id, api_key)
+                data = requests.get(url)
+                data.raise_for_status()
+                data = data.json()
                 for item in data["items"]:
                     video_url = "https://www.youtube.com/embed/%s" % (item["id"]["videoId"])
                     video_urls.append(video_url)
@@ -52,7 +58,7 @@ def update_channels():
                 channel.save()
                 continue
             for video_url in video_urls:
-                print video_url
+                print "video_url", video_url
                 filtered = videos.filter(url=video_url)
                 if filtered.exists():
                     existing_videos.append(filtered.first().id)
@@ -63,7 +69,7 @@ def update_channels():
                 m.delete()
             channel.working = True
         except Exception, e:
-            print e
+            print type(e), e
             channel.working = False
         print "Updated", channel
         channel.save()

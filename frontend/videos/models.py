@@ -9,7 +9,7 @@ min_date = timezone.make_aware(datetime.min)
 
 class Video(models.Model):
 	url = models.URLField(unique = True)
-	name = models.CharField(max_length=255, default="")
+	name = models.CharField(max_length=255, default="", blank=True)
 	enabled = models.BooleanField(default = True)
 	working = models.BooleanField(default = False)
 	lastRetrieved = models.DateTimeField(default = min_date)
@@ -48,7 +48,7 @@ class Feed(models.Model):
 
 class Channel(models.Model):
 	url = models.URLField(unique = True)
-	name = models.CharField(max_length=255, default="")
+	name = models.CharField(max_length=255, default="", blank=True)
 	enabled = models.BooleanField(default = True)
 	working = models.BooleanField(default = False)
 	lastRetrieved = models.DateTimeField(default = min_date)

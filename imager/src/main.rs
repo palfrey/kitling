@@ -75,7 +75,6 @@ fn streams<'a, D>(request: &mut Request<D>, mut res: Response<'a, D>) -> Middlew
     let mut url = match parse.find(|k| k.0 == "url") {
         Some((_, value)) => value.into_owned(),
         None => return res.error(StatusCode::BadRequest, "No URL in request"),
-
     };
     let request_url = match url::Url::parse(&url) {
         Ok(value) => value,

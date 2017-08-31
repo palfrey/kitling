@@ -62,4 +62,4 @@ class Channel(models.Model):
 	last_retrieved.admin_order_field = 'lastRetrieved'
 
 	def __unicode__(self):
-		return self.url
+		return self.name if self.name != "" else self.url

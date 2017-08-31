@@ -48,7 +48,7 @@ def update_channels():
                 info = requests.get("https://www.googleapis.com/youtube/v3/channels?id=%s&part=snippet&key=%s"%(id, api_key))
                 info.raise_for_status()
                 channel.name = info.json()["items"][0]["snippet"]["title"]
-                print channel.name
+                print channel.name.encode("ascii", errors="ignore")
                 url = "https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=%s&eventType=live&type=video&key=%s"%(id, api_key)
                 data = requests.get(url)
                 data.raise_for_status()

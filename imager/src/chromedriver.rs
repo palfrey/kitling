@@ -15,6 +15,7 @@ use std::env;
 use std::net::TcpStream;
 use std::time;
 use std::thread;
+use core::ops::DerefMut;
 
 use std::sync::{Arc, Mutex, MutexGuard};
 use nickel::{Request, Response, Middleware, Continue, MiddlewareResult};
@@ -204,7 +205,14 @@ pub trait WebdriverRequestExtensions {
 
 impl<'a, 'b, D> WebdriverRequestExtensions for Request<'a, 'b, D> {
     fn webdriver(&self) -> MutexGuard<Webdriver> {
-        self.extensions().get::<WebdriverMiddleware>().unwrap().lock().unwrap()
+        match self.extensions().get::<WebdriverMiddleware>().unwrap().lock() {
+            Ok(val) => val,
+            Err(mut err) => {
+                let w = Webdriver::new();
+                *err.get_mut().deref_mut() = w;
+                self.extensions().get::<WebdriverMiddleware>().unwrap().lock().unwrap()
+            }
+        }
     }
 }
 

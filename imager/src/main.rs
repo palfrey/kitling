@@ -47,6 +47,8 @@ extern crate regex;
 #[macro_use]
 extern crate lazy_static;
 
+extern crate reqwest;
+
 header! { (XExtra, "X-Extra") => [String] }
 
 impl<'a, D> Modifier<Response<'a, D>> for XExtra {
@@ -136,9 +138,7 @@ fn streams<'a, D>(request: &mut Request<D>, mut res: Response<'a, D>) -> Middlew
                     }
                 };
 
-                let mut status_res = hyper::client::Client::new()
-                    .get(&format!("https://www.youtube.com/get_video_info?video_id={}", id))
-                    .send()
+                let mut status_res = reqwest::get(&format!("https://www.youtube.com/get_video_info?video_id={}", id))
                     .unwrap();
                 let mut buffer = String::new();
                 status_res.read_to_string(&mut buffer).unwrap();

@@ -1,4 +1,4 @@
-FROM jimmycuadra/rust:1.9.0
+FROM jimmycuadra/rust:1.19.0
 ENV DEBIAN_FRONTEND noninteractive
 RUN apt-get update
 

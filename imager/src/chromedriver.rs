@@ -233,8 +233,8 @@ impl WebdriverSession {
         format!("{}{}", self.base_url, rest)
     }
 
-    pub fn goto_url(&self, url: String) {
-        let params = GetParameters { url: url };
+    pub fn goto_url(&self, url: &String) {
+        let params = GetParameters { url: url.clone() };
         self.client()
             .post(&self.url(format!("/{}/url", self.session_id)))
             .body(&params.to_json().to_string())

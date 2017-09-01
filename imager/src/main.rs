@@ -2,7 +2,6 @@
 extern crate log;
 extern crate log4rs;
 
-#[macro_use]
 extern crate nickel;
 use nickel::{Request, Response, MiddlewareResult, Nickel, MediaType};
 use nickel::status::StatusCode;
@@ -73,7 +72,7 @@ fn streams<'a, D>(request: &mut Request<D>, mut res: Response<'a, D>) -> Middlew
     request.origin.read_to_string(&mut buffer).unwrap();
     let mut parse = form_urlencoded::parse(buffer.as_bytes());
     let mut url = match parse.find(|k| k.0 == "url") {
-        Some((_, value)) => value.into_owned(),
+        Some((_, value)) => String::from(value.into_owned()),
         None => return res.error(StatusCode::BadRequest, "No URL in request"),
     };
     let request_url = match url::Url::parse(&url) {
@@ -155,7 +154,7 @@ fn streams<'a, D>(request: &mut Request<D>, mut res: Response<'a, D>) -> Middlew
                                      format!("Youtube feed not running: '{}'", url));
                 }
                 extra_fn = extra;
-                url = url + "?autoplay=1";
+                url = format!("{}?autoplay=1", url);
                 "//div[@id='player']"
             }
             _ => {
@@ -168,7 +167,7 @@ fn streams<'a, D>(request: &mut Request<D>, mut res: Response<'a, D>) -> Middlew
         }
         .to_string();
     let session = request.webdriver().deref().make_session(device_name);
-    session.goto_url(url);
+    session.goto_url(&url);
     thread::sleep(time::Duration::from_secs(5));
     let element: ValueResponse = match session.find_element_by_xpath(xpath) {
         Err(val) => {
@@ -226,7 +225,7 @@ fn run(ip: std::net::IpAddr, port: u16, client: chromedriver::Webdriver) {
     let mut server = Nickel::new();
     server.utilize(chromedriver::WebdriverMiddleware::new(client));
     server.post("/streams", streams);
-    server.listen((ip, port));
+    server.listen((ip, port)).unwrap();
 }
 
 fn main() {

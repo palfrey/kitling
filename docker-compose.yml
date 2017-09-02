@@ -1,5 +1,7 @@
 imager:
   build: imager/
+  volumes:
+    - ./imager/:/imager/
   ports:
     - "8001:8000"
 comparer:

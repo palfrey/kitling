@@ -1,8 +1,0 @@
-Pillow==3.0.0
-falcon==0.3.0
-gunicorn==19.3.0
-python-mimeparse==0.1.4
-selenium==2.48.0
-futures==3.0.3
-livestreamer==1.12.2
-singledispatch==3.4.0.3

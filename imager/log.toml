@@ -6,11 +6,11 @@ refresh_rate = 30
 kind = "console"
 
 [root]
-level = "debug"
+level = "info"
 appenders = ["stdout"]
 
-[loggers."hyper"]
-level = "info"
+[loggers."kitling_imager"]
+level = "debug"
 
-[loggers."mime"]
-level = "info"
+[loggers."nickel"]
+level = "debug"

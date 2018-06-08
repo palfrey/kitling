@@ -2,7 +2,6 @@
 extern crate log;
 extern crate log4rs;
 
-#[macro_use]
 extern crate nickel;
 use nickel::{Request, Response, MiddlewareResult, Nickel, MediaType};
 use nickel::status::StatusCode;
@@ -48,6 +47,8 @@ extern crate regex;
 #[macro_use]
 extern crate lazy_static;
 
+extern crate reqwest;
+
 header! { (XExtra, "X-Extra") => [String] }
 
 impl<'a, D> Modifier<Response<'a, D>> for XExtra {
@@ -57,7 +58,7 @@ impl<'a, D> Modifier<Response<'a, D>> for XExtra {
 }
 
 fn xpath_helper(session: &WebdriverSession, xpath: String) -> Result<ValueResponse, String> {
-    return match session.find_element_by_xpath(xpath) {
+    match session.find_element_by_xpath(xpath) {
         Err(val) => Err(format!("Error while trying to get element: {:?}", val)),
         Ok(val) => {
             match val {
@@ -65,18 +66,16 @@ fn xpath_helper(session: &WebdriverSession, xpath: String) -> Result<ValueRespon
                 _ => Err(format!("Didn't expect {:?}", val)),
             }
         }
-    };
+    }
 }
 
 fn streams<'a, D>(request: &mut Request<D>, mut res: Response<'a, D>) -> MiddlewareResult<'a, D> {
-    let session = request.webdriver().deref().make_session();
     let mut buffer = String::new();
     request.origin.read_to_string(&mut buffer).unwrap();
     let mut parse = form_urlencoded::parse(buffer.as_bytes());
     let mut url = match parse.find(|k| k.0 == "url") {
-        Some((_, value)) => value.into_owned(),
+        Some((_, value)) => String::from(value.into_owned()),
         None => return res.error(StatusCode::BadRequest, "No URL in request"),
-
     };
     let request_url = match url::Url::parse(&url) {
         Ok(value) => value,
@@ -87,6 +86,7 @@ fn streams<'a, D>(request: &mut Request<D>, mut res: Response<'a, D>) -> Middlew
 
     };
     let host = request_url.host_str().unwrap();
+    let mut device_name: &str = "Laptop with HiDPI screen";
     let extra_fn: fn(WebdriverSession) -> String;
     let xpath = match host {
             "livestream.com" => {
@@ -94,7 +94,7 @@ fn streams<'a, D>(request: &mut Request<D>, mut res: Response<'a, D>) -> Middlew
                     lazy_static! {
                         static ref RE: regex::Regex =
                             regex::Regex::new(
-                                r"app-argument=http://livestream.com/accounts/(\d+)/events/(\d+)")
+                                r"app-argument=https?://livestream.com/accounts/(\d+)/events/(\d+)")
                         .unwrap();
                     }
                     let source = session.get_page_source();
@@ -102,28 +102,59 @@ fn streams<'a, D>(request: &mut Request<D>, mut res: Response<'a, D>) -> Middlew
                     format!("[\"{}\",\"{}\"]", &caps[1], &caps[2])
                 }
                 extra_fn = extra;
-                "//div[@id='image-container']/img"
+                device_name = "Apple iPhone 5";
+                "//img[@class='thumbnail_image']"
             }
             "www.ustream.tv" => {
                 fn extra(session: WebdriverSession) -> String {
                     let res = xpath_helper(&session, "//video[@id='UViewer']".to_string());
-                    return match res {
+                    match res {
                         Ok(val) => format!("\"{}\"", session.get_element_attribute(&val, "src")),
                         Err(val) => {
                             warn!("Error while trying to get Ustream extra data {}", val);
                             "".to_string()
                         }
-                    };
+                    }
                 }
                 extra_fn = extra;
+                device_name = "Apple iPhone 5";
                 "//video[@id='UViewer']"
             }
             "www.youtube.com" => {
                 fn extra(_: WebdriverSession) -> String {
                     "".to_string()
                 }
+                lazy_static! {
+                    static ref RE: regex::Regex =
+                        regex::Regex::new(
+                            r"https://www.youtube.com/embed/([A-Za-z0-9_-]+)")
+                    .unwrap();
+                }
+                let id = match RE.captures(&url) {
+                    Some(val) => String::from(&val[1]),
+                    None => {
+                        return res.error(StatusCode::BadRequest,
+                                         format!("Bad Youtube URL: '{}'", url))
+                    }
+                };
+
+                let mut status_res = reqwest::get(&format!("https://www.youtube.com/get_video_info?video_id={}", id))
+                    .unwrap();
+                let mut buffer = String::new();
+                status_res.read_to_string(&mut buffer).unwrap();
+                lazy_static! {
+                    static ref STATUS_RE: regex::Regex =
+                        regex::Regex::new(
+                            r"&status=([^&]+)&")
+                    .unwrap();
+                }
+                let status_caps = STATUS_RE.captures(&buffer).unwrap();
+                if &status_caps[1] == "fail" {
+                    return res.error(StatusCode::BadRequest,
+                                     format!("Youtube feed not running: '{}'", url));
+                }
                 extra_fn = extra;
-                url = url + "?autoplay=1";
+                url = format!("{}?autoplay=1", url);
                 "//div[@id='player']"
             }
             _ => {
@@ -135,8 +166,8 @@ fn streams<'a, D>(request: &mut Request<D>, mut res: Response<'a, D>) -> Middlew
 
         }
         .to_string();
-
-    session.goto_url(url);
+    let session = request.webdriver().deref().make_session(device_name);
+    session.goto_url(&url);
     thread::sleep(time::Duration::from_secs(5));
     let element: ValueResponse = match session.find_element_by_xpath(xpath) {
         Err(val) => {
@@ -174,10 +205,10 @@ fn streams<'a, D>(request: &mut Request<D>, mut res: Response<'a, D>) -> Middlew
     let (width, height) = loaded_image.dimensions();
     debug!("Loaded image dimensions: {} x {}", width, height);
     let cropped = loaded_image.crop(
-		element_location.find("x").expect("x").as_u64().expect("numeric x") as u32,
-		element_location.find("y").expect("y").as_u64().expect("numeric y") as u32,
-		element_size.find("width").expect("width").as_u64().expect("numeric width") as u32,
-		element_size.find("height").expect("height").as_u64().expect("numeric height") as u32);
+		element_location.find("x").expect("x").as_f64().expect("numeric x") as u32,
+		element_location.find("y").expect("y").as_f64().expect("numeric y") as u32,
+		element_size.find("width").expect("width").as_f64().expect("numeric width") as u32,
+		element_size.find("height").expect("height").as_f64().expect("numeric height") as u32);
 
     let mut output_buffer: Vec<u8> = Vec::new();
     cropped.save(&mut output_buffer, image::ImageFormat::PNG).unwrap();
@@ -194,7 +225,7 @@ fn run(ip: std::net::IpAddr, port: u16, client: chromedriver::Webdriver) {
     let mut server = Nickel::new();
     server.utilize(chromedriver::WebdriverMiddleware::new(client));
     server.post("/streams", streams);
-    server.listen((ip, port));
+    server.listen((ip, port)).unwrap();
 }
 
 fn main() {

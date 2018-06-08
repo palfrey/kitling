@@ -39,6 +39,7 @@ INSTALLED_APPS = (
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django_crontab',
 	'rest_framework',
 	'videos'
 )
@@ -85,6 +86,9 @@ WSGI_APPLICATION = 'kitling.wsgi.application'
 
 DATABASES = {'default': dj_database_url.config(default='postgres://postgres:mysecretpassword@192.168.99.100/postgres')}
 
+CRONJOBS = [
+    ('0 3 * * *', 'videos.tasks.update_channels')
+]
 
 # Internationalization
 # https://docs.djangoproject.com/en/1.8/topics/i18n/
@@ -109,3 +113,5 @@ GENSHI_TEMPLATE_LOADERS = (
      'django_genshi.loaders.app_directories.load_template',
      'django_genshi.loaders.filesystem.load_template',
 )
+
+TEMPLATE_DIRS = (os.path.join(BASE_DIR, "templates"),)

@@ -1,4 +1,4 @@
-FROM jimmycuadra/rust:1.9.0
+FROM jimmycuadra/rust:1.19.0
 ENV DEBIAN_FRONTEND noninteractive
 RUN apt-get update
 
@@ -15,7 +15,7 @@ RUN apt-get install -fy --force-yes --no-install-recommends \
 	&& apt-get clean \
 	&& rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-RUN wget http://chromedriver.storage.googleapis.com/2.21/chromedriver_linux64.zip
+RUN wget http://chromedriver.storage.googleapis.com/2.28/chromedriver_linux64.zip
 RUN unzip chromedriver_linux64.zip -d /imager
 ADD chromedriver-xvfb.sh /imager
 

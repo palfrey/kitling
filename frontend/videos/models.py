@@ -1,18 +1,25 @@
 from django.db import models
 from django.contrib.auth.models import User
+from django.utils import timezone
 from datetime import datetime
 from jsonfield import JSONField
 import humanize
 
+min_date = timezone.make_aware(datetime.min)
+
 class Video(models.Model):
 	url = models.URLField(unique = True)
+	name = models.CharField(max_length=255, default="", blank=True)
+	enabled = models.BooleanField(default = True)
 	working = models.BooleanField(default = False)
-	lastRetrieved = models.DateTimeField(default = datetime.min)
+	lastRetrieved = models.DateTimeField(default = min_date)
 	motion = models.FloatField(default = 0.0)
 	offset = models.FloatField(default = 0.0)
 	hash = models.CharField(max_length = 100, null = True, blank=True, default = None)
 	extra = JSONField(default = {}, blank=True)
 	streamURL = models.CharField(max_length = 2048, null = True, blank = True)
+	notes = models.CharField(max_length = 1024, null = True, blank = True)
+	channel = models.ForeignKey('Channel', null = True, blank = True, default = None)
 
 	def corrected_motion(self):
 		return self.motion + self.offset
@@ -20,7 +27,9 @@ class Video(models.Model):
 	corrected_motion.admin_order_field = 'motion'
 
 	def last_retrieved(self):
-		return humanize.naturaltime(datetime.now(self.lastRetrieved.tzinfo) - self.lastRetrieved)
+		if self.lastRetrieved == min_date:
+			return "Never"
+		return humanize.naturaltime(timezone.now() - self.lastRetrieved)
 
 	last_retrieved.admin_order_field = 'lastRetrieved'
 
@@ -36,3 +45,21 @@ class Feed(models.Model):
 
 	class Meta:
 		unique_together = ("name", "owner")
+
+class Channel(models.Model):
+	url = models.URLField(unique = True)
+	name = models.CharField(max_length=255, default="", blank=True)
+	enabled = models.BooleanField(default = True)
+	working = models.BooleanField(default = False)
+	lastRetrieved = models.DateTimeField(default = min_date)
+	notes = models.CharField(max_length = 1024, null = True, blank = True)
+
+	def last_retrieved(self):
+		if self.lastRetrieved == min_date:
+			return "Never"
+		return humanize.naturaltime(timezone.now() - self.lastRetrieved)
+
+	last_retrieved.admin_order_field = 'lastRetrieved'
+
+	def __unicode__(self):
+		return self.name if self.name != "" else self.url

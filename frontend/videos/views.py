@@ -47,10 +47,10 @@ feed_order = (F('motion') + F('offset')).desc()
 
 def feed(request, username, feedName):
 	feed = Feed.objects.get(owner__username__iexact = username, name__iexact = feedName)
-	return feed_core(feed.videos.filter(working__exact = True).order_by(feed_order).first())
+	return feed_core(feed.videos.filter(enabled__exact = True, working__exact = True).order_by(feed_order).first())
 
 def all_feeds(request):
-	return feed_core(Video.objects.filter(working__exact = True).order_by(feed_order).first())
+	return feed_core(Video.objects.filter(enabled__exact = True, working__exact = True).order_by(feed_order).first())
 
 def feed_core(video):
 	if video == None:

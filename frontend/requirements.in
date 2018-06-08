@@ -1,0 +1,9 @@
+Django >= 2
+dj-database-url
+django-crontab
+djangorestframework
+humanize
+psycopg2 >=2.7
+jsonfield
+
+pip-tools

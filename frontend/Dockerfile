@@ -1,25 +1,24 @@
-FROM ubuntu:15.04
-RUN echo "deb http://archive.ubuntu.com/ubuntu vivid multiverse\n" >> /etc/apt/sources.list
+FROM ubuntu:16.04
 ENV DEBIAN_FRONTEND noninteractive
 RUN apt-get update && apt-get install -fy --force-yes --no-install-recommends \
-	python-pip \
+	python3-pip \
 	libpq-dev \
-	python-dev \
+	python3-dev \
 	postgresql-client-common \
-	postgresql-client-9.4 \
+	postgresql-client-9.5 \
 	build-essential \
 	cron \
 	&& apt-get clean \
 	&& rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 COPY requirements.txt requirements.txt
-RUN pip install -r requirements.txt
+RUN pip3 install setuptools wheel
+RUN pip3 install -r requirements.txt
 WORKDIR /frontend
 COPY kitling /frontend/kitling
 COPY videos /frontend/videos
 COPY templates /frontend/templates
 COPY manage.py /frontend/manage.py
-COPY refreeze.sh /frontend/refreeze.sh
 COPY wait-for-postgres.sh /frontend/wait-for-postgres.sh
 EXPOSE 8000
 ENV PGPASSWORD mysecretpassword
-CMD ./wait-for-postgres.sh postgres && python manage.py migrate && python manage.py crontab add && /etc/init.d/cron start && python manage.py runserver 0.0.0.0:8000
+CMD ./wait-for-postgres.sh postgres && python3 manage.py migrate && python3 manage.py crontab add && /etc/init.d/cron start && python3 manage.py runserver 0.0.0.0:8000

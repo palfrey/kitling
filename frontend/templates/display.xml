@@ -1,43 +1,48 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml"
-      xmlns:py="http://genshi.edgewall.org/">
-    <title>Video display for ${feed.name}</title>
+<html xmlns="http://www.w3.org/1999/xhtml">
+    <head>
+    <title>Video display for {{feed.name}}</title>
 	<style>
 		body {
 		    margin: 0 !important;
 		    padding: 0 !important;
 		}
 	</style>
-	<script src="//code.jquery.com/jquery-2.1.4.min.js" />
-    <h2 py:if="feed.videos.count() == 0">No videos for '${feed.name}'!</h2>
-    <py:if test="feed.videos.count() > 0">
-    	<iframe src="" width="1440" height="778" frameborder="0" scrolling="no" id="videoFrame"> </iframe>
-    	<script>
-        function updateVideoFeed() {
-            url = ${ "\"/feed/_all\"" if feed.all else "\"/feed/%s/%s/\"" %(feed.owner.username, feed.name)}
-            $.get( url, function( xml ) {
-              xmlDoc = $.parseXML( xml );
-              xml = $( xmlDoc );
-              url = xml.find("url").text();
-              vf = $( "#videoFrame" );
-              if (vf.attr("src") != url) {
-                  console.log("New video URL " + url);
-                  vf.attr("src", url);
-              }
-            })
-            .always(function() {
-              setTimeout(updateVideoFeed, 5000);
-            });
-        }
-        updateVideoFeed();
-
-        function resizeWindow() {
+	<script src="//code.jquery.com/jquery-2.1.4.min.js"></script>
+    {% if feed.videos %}
+    <iframe src="" width="1440" height="778" frameborder="0" scrolling="no" id="videoFrame"> </iframe>
+    <script>
+    function updateVideoFeed() {
+        url = "{{ url }}"
+        $.get( url, function( xml ) {
+            xmlDoc = $.parseXML( xml );
+            xml = $( xmlDoc );
+            url = xml.find("url").text();
             vf = $( "#videoFrame" );
-            vf.attr("width", $(document).width());
-            vf.attr("height", $(document).height());
-        }
-        resizeWindow();
-        $( window ).resize(resizeWindow);
-    	</script>
-    </py:if>
+            if (vf.attr("src") != url) {
+                console.log("New video URL " + url);
+                vf.attr("src", url);
+            }
+        })
+        .always(function() {
+            setTimeout(updateVideoFeed, 5000);
+        });
+    }
+    updateVideoFeed();
+
+    function resizeWindow() {
+        vf = $( "#videoFrame" );
+        vf.attr("width", $(document).width());
+        vf.attr("height", $(document).height());
+    }
+    resizeWindow();
+    $( window ).resize(resizeWindow);
+    </script>
+    </head>
+    {% else %}
+    </head>
+    <body>
+        <h2>No videos for '{{ feed.name }}'!</h2>
+    </body>
+    {% endif %}
 </html>

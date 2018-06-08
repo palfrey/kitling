@@ -14,6 +14,6 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='video',
             name='channel',
-            field=models.ForeignKey(default=None, blank=True, to='videos.Channel', null=True),
+            field=models.ForeignKey(default=None, blank=True, to='videos.Channel', null=True, on_delete=models.CASCADE),
         ),
     ]

@@ -17,7 +17,7 @@ class Migration(migrations.Migration):
             name='Feed',
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
-                ('owner', models.ForeignKey(to=settings.AUTH_USER_MODEL)),
+                ('owner', models.ForeignKey(to=settings.AUTH_USER_MODEL, on_delete=models.CASCADE)),
             ],
         ),
         migrations.AddField(

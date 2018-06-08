@@ -2,6 +2,7 @@ from django.conf.urls import include, url
 from django.contrib import admin
 from rest_framework import routers
 from videos import views
+from django.urls import path
 
 router = routers.DefaultRouter()
 router.register(r'users', views.UserViewSet)
@@ -17,5 +18,5 @@ urlpatterns = [
     url(r'^feed/_all/$', views.all_feeds),
     url(r'^api/', include(router.urls)),
     url(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework')),
-    url(r'^admin/', include(admin.site.urls)),
+    path('admin/', admin.site.urls),
 ]

@@ -3,7 +3,8 @@ dj-database-url
 django-crontab
 djangorestframework
 humanize
-psycopg2 >=2.7
+psycopg2-binary >=2.7
 jsonfield
+jinja2
 
 pip-tools

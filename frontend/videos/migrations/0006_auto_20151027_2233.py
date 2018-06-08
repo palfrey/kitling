@@ -15,6 +15,6 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='video',
             name='lastRetrieved',
-            field=models.DateTimeField(default=timezone.make_aware(datetime.datetime.min)),
+            field=models.DateTimeField(default=timezone.make_aware(datetime.datetime(1970,1,1))),
         ),
     ]

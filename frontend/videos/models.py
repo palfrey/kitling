@@ -5,7 +5,7 @@ from datetime import datetime
 from jsonfield import JSONField
 import humanize
 
-min_date = timezone.make_aware(datetime.min)
+min_date = timezone.make_aware(datetime(1970,1,1))
 
 class Video(models.Model):
 	url = models.URLField(unique = True)
@@ -19,7 +19,7 @@ class Video(models.Model):
 	extra = JSONField(default = {}, blank=True)
 	streamURL = models.CharField(max_length = 2048, null = True, blank = True)
 	notes = models.CharField(max_length = 1024, null = True, blank = True)
-	channel = models.ForeignKey('Channel', null = True, blank = True, default = None)
+	channel = models.ForeignKey('Channel', null = True, blank = True, default = None, on_delete=models.CASCADE)
 
 	def corrected_motion(self):
 		return self.motion + self.offset
@@ -39,7 +39,7 @@ class Video(models.Model):
 class Feed(models.Model):
 	name = models.CharField(max_length = 200)
 	description = models.TextField()
-	owner = models.ForeignKey(User)
+	owner = models.ForeignKey(User, on_delete=models.CASCADE)
 	videos = models.ManyToManyField(Video, blank = True)
 	all = False
 

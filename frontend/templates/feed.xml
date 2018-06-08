@@ -1,1 +1,1 @@
-<feed><url>$url</url></feed>
+<feed><url>{{url}}</url></feed>

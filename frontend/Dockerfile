@@ -18,7 +18,6 @@ COPY kitling /frontend/kitling
 COPY videos /frontend/videos
 COPY templates /frontend/templates
 COPY manage.py /frontend/manage.py
-COPY refreeze.sh /frontend/refreeze.sh
 COPY wait-for-postgres.sh /frontend/wait-for-postgres.sh
 EXPOSE 8000
 ENV PGPASSWORD mysecretpassword

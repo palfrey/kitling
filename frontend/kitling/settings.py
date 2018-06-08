@@ -46,15 +46,15 @@ INSTALLED_APPS = (
 
 REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': ('rest_framework.permissions.IsAuthenticated',),
-    'PAGE_SIZE': 10
+    'PAGE_SIZE': 10,
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination'
 }
 
-MIDDLEWARE_CLASSES = (
+MIDDLEWARE = (
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'django.middleware.security.SecurityMiddleware',
@@ -84,7 +84,7 @@ WSGI_APPLICATION = 'kitling.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/1.8/ref/settings/#databases
 
-DATABASES = {'default': dj_database_url.config(default='postgres://postgres:mysecretpassword@192.168.99.100/postgres')}
+DATABASES = {'default': dj_database_url.config(default='sqlite:///kitling.db')}
 
 CRONJOBS = [
     ('0 3 * * *', 'videos.tasks.update_channels')

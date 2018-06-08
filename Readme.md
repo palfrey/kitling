@@ -1,5 +1,6 @@
 kitling
 -------
+[![Updates](https://pyup.io/repos/github/palfrey/kitling/shield.svg)](https://pyup.io/repos/github/palfrey/kitling/)
 [![Clippy Linting Result](https://clippy.bashy.io/github/palfrey/kitling/master/badge.svg)](https://clippy.bashy.io/github/palfrey/kitling/master/log)
 
 Kitling aka “Moving Kittens as a Service”. It’s a horribly over engineered approach to noticing moving kittens (or any other video feeds you want to hand it).

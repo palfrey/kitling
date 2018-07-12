@@ -1,7 +1,7 @@
-FROM jimmycuadra/rust:1.8.0
+FROM rust:1.27
 RUN apt-get update && apt-get install -fy --force-yes --no-install-recommends \
 	postgresql-client-common \
-	postgresql-client-9.4 \
+	postgresql-client-9.6 \
 	&& apt-get clean \
 	&& rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 ENV RUST_BACKTRACE=1

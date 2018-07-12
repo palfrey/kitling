@@ -4,12 +4,15 @@ version = "0.1.0"
 authors = ["Tom Parker <palfrey@tevp.net>"]
 
 [dependencies]
-image = "*"
-postgres = {version = ">= 0.10", features=["time"]}
+postgres = {version = ">= 0.10", features=["with-time"]}
 log = "*"
-log4rs = {version = ">= 0.3.3", features=["toml"]}
+log4rs = {version = ">= 0.3.3", features=["toml_format"]}
 time = ">= 0.1.35"
-hyper = ">= 0.6.15"
 url = ">= 0.2.37"
 toml = ">= 0.1.23"
-img_hash = {git = "https://github.com/cybergeek94/img_hash", features=["rust-image"]}
+
+img_hash = {version="2.0", features=["rust-image"]}
+image = "0.13" # As used by img_hash
+
+reqwest = "0.8"
+hyper = "0.11" # As used by reqwest

@@ -4,25 +4,24 @@ extern crate postgres;
 #[macro_use] extern crate log;
 extern crate log4rs;
 extern crate time;
-#[macro_use] extern crate hyper;
 extern crate url;
 extern crate toml;
+extern crate reqwest;
+#[macro_use] extern crate hyper;
 
 use std::env;
-use postgres::{Connection, SslMode};
+use postgres::{Connection, TlsMode};
 use img_hash::{ImageHash, HashType};
 use std::thread;
 use std::default::Default;
 use time::{Timespec, Duration};
-use hyper::Client;
-use hyper::header::ContentType;
 use image::ImageFormat;
 use image::GenericImage;
 use std::io::Read;
-use hyper::status::StatusCode;
 use postgres::stmt::Statement;
 use std::fs::File;
-use url::form_urlencoded;
+use reqwest::StatusCode;
+use toml::Value;
 
 header! { (XExtra, "X-Extra") => [String] }
 header! { (XStream, "X-Stream") => [String] }
@@ -56,29 +55,28 @@ fn get_motion(old_hash: postgres::Result<String>, new_hash: &img_hash::ImageHash
 fn get_config() -> toml::Value {
     let mut config_string = String::new();
     File::open("config.toml").unwrap().read_to_string(&mut config_string).unwrap();
-    let mut parser = toml::Parser::new(&config_string);
-
-    parser.parse().unwrap().get("config").unwrap().clone()
+    let parser = config_string.parse::<Value>();
+    parser.unwrap().get("config").unwrap().clone()
 }
 
 fn main() {
     let config_table = get_config();
-    let interval = Duration::minutes(config_table.lookup("refresh_minutes")
+    let interval = Duration::minutes(config_table.get("refresh_minutes")
                                                  .unwrap()
                                                  .as_integer()
                                                  .unwrap());
-    let imager_url: &str = &(String::from(config_table.lookup("imager_host")
+    let imager_url: &str = &(String::from(config_table.get("imager_host")
                                                       .unwrap()
                                                       .as_str()
                                                       .unwrap()) +
                              &String::from("/streams"));
     let check_ms = Duration::milliseconds(
-        config_table.lookup("check_ms").unwrap().as_integer().unwrap())
+        config_table.get("check_ms").unwrap().as_integer().unwrap())
         .to_std().unwrap();
 
     log4rs::init_file("log.toml", Default::default()).unwrap();
-    let db_url: &str = &env::var("DATABASE_URL").unwrap();
-    let conn = Connection::connect(db_url, SslMode::None).unwrap();
+    let db_url: &str = &env::var("DATABASE_URL").expect("No DATABASE_URL");
+    let conn = Connection::connect(db_url, TlsMode::None).unwrap();
 
     let query_stmt = prepare_statement(&conn,
                                        "select * from videos_video order by \"lastRetrieved\" \
@@ -124,14 +122,10 @@ fn main() {
         }
         info!("Updating {}", url);
 
-        let data: String = form_urlencoded::Serializer::new(String::new())
-            .append_pair("url", &url)
-            .finish();
-
-        let raw_resp = Client::new()
-                           .post(imager_url)
-                           .header(ContentType::form_url_encoded())
-                           .body(&data)
+        let params = [("url", &url)];
+        let client = reqwest::Client::new();
+        let raw_resp = client.post(imager_url)
+                           .form(&params)
                            .send();
 
         if raw_resp.is_err() {
@@ -144,15 +138,15 @@ fn main() {
         let mut resp = raw_resp.unwrap();
 
         let now = time::now().to_timespec();
-        if resp.status != StatusCode::Ok {
-            warn!("{:?}", resp.status_raw());
+        if resp.status() != StatusCode::Ok {
+            warn!("{:?}", resp.error_for_status());
             not_working_stmt.execute(&[&now, &id]).unwrap();
             thread::sleep(check_ms);
             continue;
         }
 
-        let extra: String = resp.headers.get::<XExtra>().map_or("{}".to_string(), |v| v.to_string());
-        let stream: String = resp.headers.get::<XStream>().map_or("".to_string(), |v| v.to_string());
+        let extra: String = resp.headers().get::<XExtra>().map_or("{}".to_string(), |v| v.to_string());
+        let stream: String = resp.headers().get::<XStream>().map_or("".to_string(), |v| v.to_string());
 
         let mut buf = Vec::new();
         resp.read_to_end(&mut buf).unwrap();

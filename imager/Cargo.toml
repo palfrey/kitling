@@ -1,0 +1,22 @@
+[package]
+name = "kitling-imager"
+version = "0.1.0"
+authors = ["Tom Parker <palfrey@tevp.net>"]
+
+[dependencies]
+image = "*"
+log = "*"
+log4rs = {version = ">= 0.3.3", features=["toml"]}
+nickel = "<0.11"
+hyper = "^0.10"
+modifier = "0.1.0"
+url = "*"
+webdriver = "*"
+rustc-serialize = "0.3"
+get_if_addrs = "0.4.0"
+plugin = "*"
+typemap = "*"
+rand = "*"
+regex = "*"
+lazy_static = "*"
+reqwest = "0.7.3"

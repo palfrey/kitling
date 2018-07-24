@@ -38,21 +38,22 @@ INSTALLED_APPS = (
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django_crontab',
 	'rest_framework',
 	'videos'
 )
 
 REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': ('rest_framework.permissions.IsAuthenticated',),
-    'PAGE_SIZE': 10
+    'PAGE_SIZE': 10,
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination'
 }
 
-MIDDLEWARE_CLASSES = (
+MIDDLEWARE = (
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'django.middleware.security.SecurityMiddleware',
@@ -63,7 +64,7 @@ ROOT_URLCONF = 'kitling.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [os.path.join(BASE_DIR, "templates")],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -82,15 +83,18 @@ WSGI_APPLICATION = 'kitling.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/1.8/ref/settings/#databases
 
-DATABASES = {'default': dj_database_url.config(default='postgres://postgres:mysecretpassword@192.168.99.100/postgres')}
+DATABASES = {'default': dj_database_url.config(default='sqlite:///kitling.db')}
 
+CRONJOBS = [
+    ('0 3 * * *', 'videos.tasks.update_channels')
+]
 
 # Internationalization
 # https://docs.djangoproject.com/en/1.8/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'en-gb'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Europe/London'
 
 USE_I18N = True
 
@@ -113,6 +117,4 @@ GENSHI_TEMPLATE_LOADERS = (
      'django_genshi.loaders.filesystem.load_template',
 )
 
-TEMPLATE_DIRS = [
-	os.path.join(BASE_DIR, "templates")
-]
+TEMPLATE_DIRS = (os.path.join(BASE_DIR, "templates"),)

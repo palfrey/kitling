@@ -1,5 +1,5 @@
 # Scan this file for changes every 30 seconds
-refresh_rate = "30 seconds"
+refresh_rate = 30
 
 # An appender named "stdout" that writes to stdout
 [appenders.stdout]
@@ -9,7 +9,8 @@ kind = "console"
 level = "info"
 appenders = ["stdout"]
 
-# debug for the main app, but not other things
-#[[logger]]
-# name = "kitling"
-# level = "debug"
+[loggers."kitling_imager"]
+level = "debug"
+
+[loggers."nickel"]
+level = "debug"

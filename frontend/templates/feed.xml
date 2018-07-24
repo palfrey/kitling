@@ -1,4 +1,4 @@
 <feed>
-	<url>$url</url>
-	<streamURL>$streamURL</streamURL>
+	<url>{{url}}</url>
+	<streamURL>{{streamURL}}</streamURL>
 </feed>

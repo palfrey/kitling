@@ -1,2 +1,6 @@
 *.log
 dump.txt
+target/
+*.bk
+*.png
+/chromedriver*

@@ -9,12 +9,11 @@ dj-database-url==0.5.0
 django-crontab==0.7.1
 django==2.1.2
 djangorestframework==3.8.2
-first==2.0.1              # via pip-tools
 humanize==0.5.1
 jinja2==2.10
 jsonfield==2.0.2
 markupsafe==1.0           # via jinja2
-pip-tools==2.0.2
+pip-tools==3.0.0
 psycopg2-binary==2.7.4
 pytz==2018.4              # via django
 six==1.11.0               # via pip-tools

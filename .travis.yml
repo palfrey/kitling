@@ -2,5 +2,10 @@ sudo: required
 services:
   - docker
 
+env:
+  - IMAGE=imager
+  - IMAGE=comparer
+  - IMAGE=frontend
+
 script:
-  - docker-compose build
+  - docker-compose build $IMAGE

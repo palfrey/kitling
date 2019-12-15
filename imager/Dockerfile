@@ -1,4 +1,4 @@
-FROM jimmycuadra/rust:1.19.0
+FROM rust:1.38-stretch
 ENV DEBIAN_FRONTEND noninteractive
 RUN apt-get update
 

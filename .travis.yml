@@ -1,0 +1,11 @@
+language: minimal
+services:
+  - docker
+
+env:
+  - IMAGE=imager
+  - IMAGE=comparer
+  - IMAGE=frontend
+
+script:
+  - docker-compose build $IMAGE

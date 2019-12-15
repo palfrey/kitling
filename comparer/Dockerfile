@@ -1,4 +1,4 @@
-FROM rust:1.27
+FROM rust:1.38-stretch
 RUN apt-get update && apt-get install -fy --force-yes --no-install-recommends \
 	postgresql-client-common \
 	postgresql-client-9.6 \

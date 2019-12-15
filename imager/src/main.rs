@@ -30,7 +30,7 @@ extern crate core;
 extern crate rustc_serialize;
 
 extern crate image;
-use image::GenericImage;
+use image::GenericImageView;
 use std::io::Cursor;
 
 extern crate get_if_addrs;
@@ -211,7 +211,7 @@ fn streams<'a, D>(request: &mut Request<D>, mut res: Response<'a, D>) -> Middlew
 		element_size.find("height").expect("height").as_f64().expect("numeric height") as u32);
 
     let mut output_buffer: Vec<u8> = Vec::new();
-    cropped.save(&mut output_buffer, image::ImageFormat::PNG).unwrap();
+    cropped.write_to(&mut output_buffer, image::ImageFormat::PNG).unwrap();
 
     let extra = extra_fn(session);
     res.set(XExtra(extra));

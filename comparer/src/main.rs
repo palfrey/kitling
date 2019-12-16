@@ -11,12 +11,12 @@ extern crate reqwest;
 
 use std::env;
 use postgres::{Connection, TlsMode};
-use img_hash::{ImageHash, HashType};
+use img_hash::{ImageHash, HasherConfig, HashAlg};
 use std::thread;
 use std::default::Default;
 use time::{Timespec, Duration};
 use image::ImageFormat;
-use image::GenericImage;
+use image::GenericImageView;
 use std::io::Read;
 use postgres::stmt::Statement;
 use std::fs::File;
@@ -44,7 +44,7 @@ fn get_motion(old_hash: postgres::Result<String>, new_hash: &img_hash::ImageHash
     match old_hash {
         Ok(val) => {
             match ImageHash::from_base64(&val) {
-                Ok(val) => val.dist_ratio(new_hash) as f64,
+                Ok(val) => val.dist(new_hash) as f64,
                 Err(_) => -1 as f64
             }
         },
@@ -88,6 +88,7 @@ fn main() {
                                      "update videos_video set working = false, motion = 0, \"lastRetrieved\" = $1 where id = $2");
 
     info!("Connected to Postgres and ready to update video...");
+    let hasher = HasherConfig::new().hash_alg(HashAlg::DoubleGradient).hash_size(16, 16).to_hasher();
     loop {
         let res = query_stmt.query(&[]);
         if res.is_err() {
@@ -158,7 +159,8 @@ fn main() {
             thread::sleep(check_ms);
             continue;
         }
-        let hash = ImageHash::hash(&image, 16, HashType::DoubleGradient);
+
+        let hash = hasher.hash_image(&image);
 
         debug!("Image hash: {}", hash.to_base64());
         let motion = get_motion(old_hash, &hash);

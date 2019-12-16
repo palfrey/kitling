@@ -11,7 +11,7 @@ time = ">= 0.1.35"
 url = ">= 0.2.37"
 toml = ">= 0.1.23"
 
-img_hash = {version="2.1", features=["rust-image"]}
+img_hash = "3.0"
 image = "0.21" # As used by img_hash
 
 reqwest = "0.8"

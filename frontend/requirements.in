@@ -1,4 +1,4 @@
-Django >= 2
+Django ~= 2.0
 dj-database-url
 django-crontab
 djangorestframework

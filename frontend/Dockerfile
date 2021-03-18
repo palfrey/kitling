@@ -1,11 +1,12 @@
-FROM ubuntu:16.04
+FROM ubuntu:20.04
 ENV DEBIAN_FRONTEND noninteractive
-RUN apt-get update && apt-get install -fy --force-yes --no-install-recommends \
+RUN apt-get update
+RUN apt-get install -y --no-install-recommends \
 	python3-pip \
 	libpq-dev \
 	python3-dev \
 	postgresql-client-common \
-	postgresql-client-9.5 \
+	postgresql-client \
 	build-essential \
 	cron \
 	&& apt-get clean \

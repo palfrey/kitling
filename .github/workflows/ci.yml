@@ -23,7 +23,7 @@ jobs:
       uses: actions/cache@v2
       with:
         path: /tmp/.buildx-cache
-        key: integration-${{ runner.os }}-buildx-${{ github.sha }}
+        key: integration-${{ runner.os }}-buildx-${{ github.sha }}-${{ matrix.image }}
         restore-keys: |
           integration-${{ runner.os }}-buildx-
     - name: Build ${{ matrix.image }}

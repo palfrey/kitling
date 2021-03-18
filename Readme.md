@@ -1,6 +1,6 @@
 kitling
 -------
-[![Build Status](https://travis-ci.com/palfrey/kitling.svg?branch=master)](https://travis-ci.com/palfrey/kitling)
+[![ci](https://github.com/palfrey/kitling/actions/workflows/ci.yml/badge.svg)](https://github.com/palfrey/kitling/actions)
 
 [![Docker Cloud Build Status](https://img.shields.io/docker/cloud/build/kitling/comparer?label=docker%3A%20comparer)](https://hub.docker.com/r/kitling/comparer)
 [![Docker Cloud Build Status](https://img.shields.io/docker/cloud/build/kitling/frontend?label=docker%3A%20frontend)](https://hub.docker.com/r/kitling/frontend)

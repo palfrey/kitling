@@ -26,7 +26,7 @@ jobs:
         key: integration-${{ runner.os }}-buildx-${{ github.sha }}
         restore-keys: |
           integration-${{ runner.os }}-buildx-
-    - name: Run ui-tests
+    - name: Build ${{ matrix.image }}
       env:
         COMPOSE_DOCKER_CLI_BUILD: 1
-      run: docker-compose build ${{ matrix.rust }}
+      run: docker-compose build ${{ matrix.image }}

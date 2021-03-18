@@ -4,20 +4,37 @@
 #
 #    pip-compile
 #
-click==7.1.2              # via pip-tools
-dj-database-url==0.5.0    # via -r requirements.in
-django-crontab==0.7.1     # via -r requirements.in
-django==2.2.13            # via -r requirements.in, django-crontab, jsonfield
-djangorestframework==3.9.1  # via -r requirements.in
-humanize==0.5.1           # via -r requirements.in
-jinja2==2.10.1            # via -r requirements.in
-jsonfield==2.0.2          # via -r requirements.in
-markupsafe==1.1.1         # via jinja2
-pip-tools==5.3.1          # via -r requirements.in
-psycopg2-binary==2.8.4    # via -r requirements.in
-pytz==2018.4              # via django
-six==1.11.0               # via pip-tools
-sqlparse==0.3.0           # via django
+click==7.1.2
+    # via pip-tools
+dj-database-url==0.5.0
+    # via -r requirements.in
+django-crontab==0.7.1
+    # via -r requirements.in
+django==2.2.18
+    # via
+    #   -r requirements.in
+    #   django-crontab
+    #   jsonfield
+djangorestframework==3.9.1
+    # via -r requirements.in
+humanize==0.5.1
+    # via -r requirements.in
+jinja2==2.10.1
+    # via -r requirements.in
+jsonfield==2.0.2
+    # via -r requirements.in
+markupsafe==1.1.1
+    # via jinja2
+pip-tools==5.3.1
+    # via -r requirements.in
+psycopg2-binary==2.8.4
+    # via -r requirements.in
+pytz==2018.4
+    # via django
+six==1.11.0
+    # via pip-tools
+sqlparse==0.3.0
+    # via django
 
 # The following packages are considered to be unsafe in a requirements file:
 # pip

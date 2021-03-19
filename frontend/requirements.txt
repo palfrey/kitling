@@ -19,7 +19,7 @@ djangorestframework==3.9.1
     # via -r requirements.in
 humanize==0.5.1
     # via -r requirements.in
-jinja2==2.10.1
+jinja2==2.11.3
     # via -r requirements.in
 jsonfield==2.0.2
     # via -r requirements.in

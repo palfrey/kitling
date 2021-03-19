@@ -14,8 +14,9 @@ django==2.2.18
     # via
     #   -r requirements.in
     #   django-crontab
+    #   djangorestframework
     #   jsonfield
-djangorestframework==3.9.1
+djangorestframework==3.11.2
     # via -r requirements.in
 humanize==0.5.1
     # via -r requirements.in
